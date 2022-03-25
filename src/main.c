@@ -10,9 +10,9 @@
 #include "common.h"
 #include "fio.h"
 #include "image.h"
+#include "render_objects.h"
 #include "renderer.h"
 #include "shader.h"
-#include "render_objects.h"
 
 int main() {
 	SDL_Init(SDL_INIT_VIDEO);
@@ -82,18 +82,9 @@ int main() {
 	b32 quit = false;
 
 	struct Block b[] = {
-		{
-		.position = {600, 400},
-		.size = {32, 32}
-		},
-		{
-		.position = {600, 400},
-		.size = {32, 32}
-		},
-		{
-		.position = {100, 480},
-		.size = {100, 32}
-		},
+		{.position = {600, 400}, .size = {32, 32}},
+		{.position = {600, 400}, .size = {32, 32}},
+		{.position = {100, 480}, .size = {100, 32}},
 	};
 	u32 mouse_x, mouse_y;
 	rReloadShaders(&renderer);
@@ -125,12 +116,12 @@ int main() {
 		b[0].position[0] = mouse_x;
 		b[0].position[1] = mouse_y;
 		glClear(GL_COLOR_BUFFER_BIT);
-		for(i32 i = 0; i < 3; ++i) {
+		for (i32 i = 0; i < 3; ++i) {
 			glm_mat4_identity(model);
 			glm_translate(model, (vec3){b[i].position[0], b[i].position[1], 0});
-			glm_scale(model, (vec3){b[i].size[0] / 2.0f, b[i].size[1] / 2.0f, 1.0f});
+			glm_scale(model,
+					  (vec3){b[i].size[0] / 2.0f, b[i].size[1] / 2.0f, 1.0f});
 
-			
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, spr_counting.texture_idx);
 
@@ -138,31 +129,34 @@ int main() {
 
 			glBindVertexArray(renderer.sprite_gl.vao);
 			spr_counting.current_frame = (SDL_GetTicks64() / 1000) % 4;
-			glUniform4f(glGetUniformLocation(
-							renderer.shaders[SHADER_SPRITE].program_idx, "color"),
-						1.0f, 0.0f, 0.0f, 1.0f);
+			glUniform4f(
+				glGetUniformLocation(
+					renderer.shaders[SHADER_SPRITE].program_idx, "color"),
+				1.0f, 0.0f, 0.0f, 1.0f);
 			glUniformMatrix4fv(
-				glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
-									"model"),
+				glGetUniformLocation(
+					renderer.shaders[SHADER_SPRITE].program_idx, "model"),
 				1, GL_FALSE, model);
 			glUniformMatrix4fv(
-				glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
-									"projection"),
+				glGetUniformLocation(
+					renderer.shaders[SHADER_SPRITE].program_idx, "projection"),
 				1, GL_FALSE, renderer.projection);
 			glUniformMatrix4fv(
-				glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
-									"view"),
+				glGetUniformLocation(
+					renderer.shaders[SHADER_SPRITE].program_idx, "view"),
 				1, GL_FALSE, renderer.view);
-			glUniform1i(glGetUniformLocation(
-							renderer.shaders[SHADER_SPRITE].program_idx, "sprite"),
-						0);
-			glUniform1i(glGetUniformLocation(
-							renderer.shaders[SHADER_SPRITE].program_idx, "frame"),
-						spr_counting.current_frame);
-			glUniform2fv(
-				glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
-									"frame_dimensions"),
-			1, frame_dimensions);
+			glUniform1i(
+				glGetUniformLocation(
+					renderer.shaders[SHADER_SPRITE].program_idx, "sprite"),
+				0);
+			glUniform1i(
+				glGetUniformLocation(
+					renderer.shaders[SHADER_SPRITE].program_idx, "frame"),
+				spr_counting.current_frame);
+			glUniform2fv(glGetUniformLocation(
+							 renderer.shaders[SHADER_SPRITE].program_idx,
+							 "frame_dimensions"),
+						 1, frame_dimensions);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.sprite_gl.ebo);
@@ -174,13 +168,17 @@ int main() {
 		// glm_scale(model, (vec3){100, 100, 0});
 		// rDrawPrimitive(&renderer, circle_primitive, model,
 		// 			   (vec4){1.0, 0, 0, 1.0});
-		struct LightMesh static_lm = lmGenerateLightMesh(b, 3, (vec2){100, 100}, 9, 180);
+		struct LightMesh static_lm =
+			lmGenerateLightMesh(b, 3, (vec2){100, 100}, 9, 180);
 
-		struct LightMesh point = lmGenerateLightMesh(b, 3, (vec2){mouse_x, mouse_y}, 500, 10);
-		struct LightMesh point1 = lmGenerateLightMesh(b, 3, (vec2){640, 320}, 500, 40);
-		struct LightMesh point2 = lmGenerateLightMesh(b, 3, (vec2){640, 0}, 500, 40);
-		struct LightMesh point3 = lmGenerateLightMesh(b, 3, (vec2){2, 480}, 500, 40);
-
+		struct LightMesh point =
+			lmGenerateLightMesh(b, 3, (vec2){mouse_x, mouse_y}, 500, 10);
+		struct LightMesh point1 =
+			lmGenerateLightMesh(b, 3, (vec2){640, 320}, 500, 40);
+		struct LightMesh point2 =
+			lmGenerateLightMesh(b, 3, (vec2){640, 0}, 500, 40);
+		struct LightMesh point3 =
+			lmGenerateLightMesh(b, 3, (vec2){2, 480}, 500, 40);
 
 		rDrawLightMesh(&renderer, &point);
 		rDrawLightMesh(&renderer, &point1);
