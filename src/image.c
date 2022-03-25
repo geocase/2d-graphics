@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 
 Sprite_t imgLoadSprite(const char *path, f32 frame_width, f32 frame_height,
-						u16 max_frames, f32 frame_time, u16 flags) {
+					   u16 max_frames, f32 frame_time, u16 flags) {
 	SDL_Surface *texture =
 		SDL_ConvertSurface(SDL_LoadBMP("spr_sheet.bmp"),
 						   SDL_AllocFormat(SDL_PIXELFORMAT_RGBA32), 0);

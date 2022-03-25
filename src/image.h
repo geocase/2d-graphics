@@ -13,6 +13,6 @@ typedef struct {
 } Sprite_t;
 
 Sprite_t imgLoadSprite(const char *path, f32 frame_width, f32 frame_height,
-						u16 max_frames, f32 frame_time, u16 flags);
+					   u16 max_frames, f32 frame_time, u16 flags);
 
 #endif // IMAGE_H

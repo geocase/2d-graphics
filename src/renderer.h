@@ -12,21 +12,23 @@ typedef struct {
 RenderPrimitive_t rpNewRenderPrimitive(f32 *verts, u32 vert_count, u32 *indices,
 									   u32 tri_count);
 
-enum {
-    SHADER_SPRITE,
-    SHADER_PRIMITIVE,
-    SHADER_MAX
+enum { SHADER_SPRITE, SHADER_PRIMITIVE, SHADER_MAX };
+
+struct SpriteGLIndices {
+	u32 vao, vbo, ebo;
 };
 
 typedef struct {
 	mat4 projection;
 	mat4 view;
 	vec2 size;
-    Shader_t shaders[SHADER_MAX];
+	Shader_t shaders[SHADER_MAX];
+	struct SpriteGLIndices sprite_gl;
 	// GL Context??
 } Renderer_t;
 
-void rReloadShaders(Renderer_t* renderer);
+void rGenerateSpriteGLIndices(Renderer_t *renderer);
+void rReloadShaders(Renderer_t *renderer);
 void rResize(Renderer_t *renderer, int w, int h);
 void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
 					mat4 model, vec4 color);

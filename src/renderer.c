@@ -1,7 +1,7 @@
 #include <glad/glad.h>
 
-#include "renderer.h"
 #include "fio.h"
+#include "renderer.h"
 
 RenderPrimitive_t rpNewRenderPrimitive(f32 *verts, u32 vert_count, u32 *indices,
 									   u32 tri_count) {
@@ -26,7 +26,35 @@ RenderPrimitive_t rpNewRenderPrimitive(f32 *verts, u32 vert_count, u32 *indices,
 	return rp;
 }
 
-void rReloadShaders(Renderer_t* renderer) {
+void rGenerateSpriteGLIndices(Renderer_t *renderer) {
+	f32 vertices[] = {-1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0,
+					  -1.0, 1.0,  0.0, 1.0, 1.0, 1.0,  1.0, 1.0};
+
+	u32 indices[] = {0, 1, 2, 1, 3, 2};
+
+	glGenVertexArrays(1, &renderer->sprite_gl.vao);
+	glBindVertexArray(renderer->sprite_gl.vao);
+
+	glGenBuffers(1, &renderer->sprite_gl.vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, renderer->sprite_gl.vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(f32) * 4, (void *)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(f32) * 4,
+						  (void *)(sizeof(f32) * 2));
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	glGenBuffers(1, &renderer->sprite_gl.ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->sprite_gl.ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+				 GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	return;
+}
+
+void rReloadShaders(Renderer_t *renderer) {
 	shdDeleteShader(&renderer->shaders[SHADER_SPRITE]);
 	shdDeleteShader(&renderer->shaders[SHADER_PRIMITIVE]);
 	char *primitive_vertex_shader = readFilePathToCStr("shaders/primitive.vs");
@@ -34,7 +62,8 @@ void rReloadShaders(Renderer_t* renderer) {
 		readFilePathToCStr("shaders/primitive.fs");
 	char *sprite_vertex_shader = readFilePathToCStr("shaders/sprite.vs");
 	char *sprite_fragment_shader = readFilePathToCStr("shaders/sprite.fs");
-	renderer->shaders[SHADER_SPRITE] = shdNewShader(sprite_vertex_shader, sprite_fragment_shader);
+	renderer->shaders[SHADER_SPRITE] =
+		shdNewShader(sprite_vertex_shader, sprite_fragment_shader);
 	renderer->shaders[SHADER_PRIMITIVE] =
 		shdNewShader(primitive_vertex_shader, primitive_fragment_shader);
 	free(primitive_vertex_shader);
@@ -54,19 +83,23 @@ void rResize(Renderer_t *renderer, int w, int h) {
 void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
 					mat4 model, vec4 color) {
 
-    shdUseShader(&renderer->shaders[SHADER_PRIMITIVE]);
+	shdUseShader(&renderer->shaders[SHADER_PRIMITIVE]);
 	glBindVertexArray(primitive.vao);
-	glUniform4fv(glGetUniformLocation(renderer->shaders[SHADER_PRIMITIVE].program_idx, "color"), 1,
-				 color);
+	glUniform4fv(glGetUniformLocation(
+					 renderer->shaders[SHADER_PRIMITIVE].program_idx, "color"),
+				 1, color);
 	glUniformMatrix4fv(
-		glGetUniformLocation(renderer->shaders[SHADER_PRIMITIVE].program_idx, "model"), 1,
-		GL_FALSE, model);
+		glGetUniformLocation(renderer->shaders[SHADER_PRIMITIVE].program_idx,
+							 "model"),
+		1, GL_FALSE, model);
 	glUniformMatrix4fv(
-		glGetUniformLocation(renderer->shaders[SHADER_PRIMITIVE].program_idx, "projection"), 1,
-		GL_FALSE, renderer->projection);
+		glGetUniformLocation(renderer->shaders[SHADER_PRIMITIVE].program_idx,
+							 "projection"),
+		1, GL_FALSE, renderer->projection);
 	glUniformMatrix4fv(
-		glGetUniformLocation(renderer->shaders[SHADER_PRIMITIVE].program_idx, "view"), 1, GL_FALSE,
-		renderer->view);
+		glGetUniformLocation(renderer->shaders[SHADER_PRIMITIVE].program_idx,
+							 "view"),
+		1, GL_FALSE, renderer->view);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, primitive.ebo);
 	glDrawElements(GL_TRIANGLES, primitive.tri_count, GL_UNSIGNED_INT, 0);

@@ -46,34 +46,7 @@ int main() {
 		rResize(&renderer, w, h);
 	}
 
-	f32 vertices[] = {-1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0,
-					  -1.0, 1.0,  0.0, 1.0, 1.0, 1.0,  1.0, 1.0};
-
-	u32 indices[] = {0, 1, 2, 1, 3, 2};
-
-	u32 vao;
-	u32 vbo;
-	u32 ebo;
-
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(f32) * 4, (void *)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(f32) * 4,
-						  (void *)(sizeof(f32) * 2));
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-				 GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	rGenerateSpriteGLIndices(&renderer);
 
 #define CIRCLE_RESOLUTION 50
 	vec2 circle_verts[CIRCLE_RESOLUTION + 1];
@@ -128,7 +101,7 @@ int main() {
 				break;
 			case SDL_KEYDOWN:
 				if (ev.key.keysym.sym == SDLK_F5) {
-                    rReloadShaders(&renderer);
+					rReloadShaders(&renderer);
 				}
 			case SDL_WINDOWEVENT:
 				switch (ev.window.event) {
@@ -154,43 +127,48 @@ int main() {
 
 		shdUseShader(&renderer.shaders[SHADER_SPRITE]);
 
-		glBindVertexArray(vao);
+		glBindVertexArray(renderer.sprite_gl.vao);
 		spr_counting.current_frame = (SDL_GetTicks64() / 1000) % 4;
-		glUniform4f(glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx, "color"),
+		glUniform4f(glGetUniformLocation(
+						renderer.shaders[SHADER_SPRITE].program_idx, "color"),
 					1.0f, 0.0f, 0.0f, 1.0f);
 		glUniformMatrix4fv(
-			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx, "model"), 1,
-			GL_FALSE, model);
+			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
+								 "model"),
+			1, GL_FALSE, model);
 		glUniformMatrix4fv(
-			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx, "projection"), 1,
-			GL_FALSE, renderer.projection);
+			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
+								 "projection"),
+			1, GL_FALSE, renderer.projection);
 		glUniformMatrix4fv(
-			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx, "view"), 1,
-			GL_FALSE, renderer.view);
-		glUniform1i(glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx, "sprite"),
+			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
+								 "view"),
+			1, GL_FALSE, renderer.view);
+		glUniform1i(glGetUniformLocation(
+						renderer.shaders[SHADER_SPRITE].program_idx, "sprite"),
 					0);
-		glUniform1i(glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx, "frame"),
+		glUniform1i(glGetUniformLocation(
+						renderer.shaders[SHADER_SPRITE].program_idx, "frame"),
 					spr_counting.current_frame);
 		glUniform2fv(
-			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx, "frame_dimensions"),
+			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
+								 "frame_dimensions"),
 			1, frame_dimensions);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.sprite_gl.ebo);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glm_mat4_identity(model);
 
 		glm_translate(model, (vec3){mouse_x, mouse_y, 0});
 		glm_scale(model, (vec3){100, 100, 0});
-		rDrawPrimitive(&renderer, circle_primitive, model, (vec4){1.0, 0, 0, 1.0});
+		rDrawPrimitive(&renderer, circle_primitive, model,
+					   (vec4){1.0, 0, 0, 1.0});
 
 		SDL_GL_SwapWindow(win);
 	}
 
-	glDeleteBuffers(1, &ebo);
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
 	SDL_GL_DeleteContext(context);
 	SDL_DestroyWindow(win);
 	return 0;
