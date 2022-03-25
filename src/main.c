@@ -13,11 +13,6 @@
 #include "renderer.h"
 #include "shader.h"
 
-struct Block {
-	vec2 position;
-	vec2 size;
-};
-
 int main() {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_Window *win = SDL_CreateWindow(

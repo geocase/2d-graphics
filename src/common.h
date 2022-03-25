@@ -1,7 +1,14 @@
 #ifndef COMMON_H
 #define COMMON_H
+#include <cglm/cglm.h>
+
 #include <inttypes.h>
 #include <stdbool.h>
+
+struct Block {
+	vec2 position;
+	vec2 size;
+};
 
 #define u8 uint8_t
 #define u16 uint16_t
