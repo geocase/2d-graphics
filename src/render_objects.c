@@ -28,7 +28,7 @@ void generateLightMeshGLObjects(struct LightMesh* lm, f32 *verts, u32 vert_count
 struct LightMesh lmGenerateLightMesh(struct Block* shadow_casters, u32 shadow_caster_count, vec2 position, f32 radius,
 						 u32 resolution) {
 	// Just copy the circle primitive rendering code to test
-    const f32 cast_step = 0.1f;
+    const f32 cast_step = 5.0f;
 	vec2* circle_verts = malloc(sizeof(vec2) * (resolution + 1));
 	u32* circle_indices = malloc(sizeof(u32) * (resolution * 3));;
 	vec2 center = {position[0], position[1]};

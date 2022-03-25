@@ -174,12 +174,12 @@ int main() {
 		// glm_scale(model, (vec3){100, 100, 0});
 		// rDrawPrimitive(&renderer, circle_primitive, model,
 		// 			   (vec4){1.0, 0, 0, 1.0});
-		struct LightMesh static_lm = lmGenerateLightMesh(b, 3, (vec2){100, 100}, 100, 360);
+		struct LightMesh static_lm = lmGenerateLightMesh(b, 3, (vec2){100, 100}, 9, 180);
 
-		struct LightMesh point = lmGenerateLightMesh(b, 3, (vec2){640, 480}, 100, 20);
-		struct LightMesh point1 = lmGenerateLightMesh(b, 3, (vec2){640, 320}, 100, 20);
-		struct LightMesh point2 = lmGenerateLightMesh(b, 3, (vec2){640, 0}, 100, 20);
-		struct LightMesh point3 = lmGenerateLightMesh(b, 3, (vec2){2, 480}, 100, 20);
+		struct LightMesh point = lmGenerateLightMesh(b, 3, (vec2){mouse_x, mouse_y}, 500, 10);
+		struct LightMesh point1 = lmGenerateLightMesh(b, 3, (vec2){640, 320}, 500, 40);
+		struct LightMesh point2 = lmGenerateLightMesh(b, 3, (vec2){640, 0}, 500, 40);
+		struct LightMesh point3 = lmGenerateLightMesh(b, 3, (vec2){2, 480}, 500, 40);
 
 
 		rDrawLightMesh(&renderer, &point);
