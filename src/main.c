@@ -83,11 +83,11 @@ int main() {
 
 	struct Block b[] = {
 		{
-		.position = {0, 240},
+		.position = {600, 400},
 		.size = {32, 32}
 		},
 		{
-		.position = {10, 240},
+		.position = {600, 400},
 		.size = {32, 32}
 		},
 		{
@@ -97,7 +97,6 @@ int main() {
 	};
 	u32 mouse_x, mouse_y;
 	rReloadShaders(&renderer);
-
 
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
@@ -175,10 +174,19 @@ int main() {
 		// glm_scale(model, (vec3){100, 100, 0});
 		// rDrawPrimitive(&renderer, circle_primitive, model,
 		// 			   (vec4){1.0, 0, 0, 1.0});
-		struct LightMesh point = lmGenerateLightMesh(b, 3, (vec2){640, 480}, 1000, 0);
+		struct LightMesh static_lm = lmGenerateLightMesh(b, 3, (vec2){100, 100}, 100, 360);
+
+		struct LightMesh point = lmGenerateLightMesh(b, 3, (vec2){640, 480}, 100, 20);
+		struct LightMesh point1 = lmGenerateLightMesh(b, 3, (vec2){640, 320}, 100, 20);
+		struct LightMesh point2 = lmGenerateLightMesh(b, 3, (vec2){640, 0}, 100, 20);
+		struct LightMesh point3 = lmGenerateLightMesh(b, 3, (vec2){2, 480}, 100, 20);
 
 
 		rDrawLightMesh(&renderer, &point);
+		rDrawLightMesh(&renderer, &point1);
+		rDrawLightMesh(&renderer, &point2);
+		rDrawLightMesh(&renderer, &point3);
+		rDrawLightMesh(&renderer, &static_lm);
 
 		SDL_GL_SwapWindow(win);
 	}

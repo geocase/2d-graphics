@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 
 #include "render_objects.h"
+#include "common.h"
 
 void generateLightMeshGLObjects(struct LightMesh* lm, f32 *verts, u32 vert_count, u32 *indices,
 								u32 tri_count) {
@@ -25,73 +26,50 @@ void generateLightMeshGLObjects(struct LightMesh* lm, f32 *verts, u32 vert_count
 }
 
 struct LightMesh lmGenerateLightMesh(struct Block* shadow_casters, u32 shadow_caster_count, vec2 position, f32 radius,
-						 f32 resolution) {
+						 u32 resolution) {
 	// Just copy the circle primitive rendering code to test
-    const f32 cast_step = 0.001f;
-	vec2* circle_verts = malloc(sizeof(vec2) * (shadow_caster_count * 4 + 1));
-	u32* circle_indices = malloc(sizeof(u32) * (shadow_caster_count * 4 * 3));;
+    const f32 cast_step = 0.1f;
+	vec2* circle_verts = malloc(sizeof(vec2) * (resolution + 1));
+	u32* circle_indices = malloc(sizeof(u32) * (resolution * 3));;
 	vec2 center = {position[0], position[1]};
 	f32 angle = 0.0f;
 	f32 max_angle = 2.0f * M_PI;
-
-    // get shadow caster vertices
-    vec2* sc_verts = malloc(sizeof(vec2) * (shadow_caster_count * 4));
-    for(u32 i = 0; i < shadow_caster_count; i += 1) {
-        u32 p = i * 4;
-        vec2 adjusted_size = {
-            shadow_casters[i].size[0] / 2.0f,
-            shadow_casters[i].size[1] / 2.0f
-        };
-        vec2 ps;
-        glm_vec2_add(shadow_casters[i].position, adjusted_size, ps);
-        
-        vec2 pw = {shadow_casters[i].position[0] + adjusted_size[0], shadow_casters[i].position[1]};
-        vec2 ph = {shadow_casters[i].position[0], shadow_casters[i].position[1] + adjusted_size[1]};
-        glm_vec2_copy(shadow_casters[i].position, sc_verts[p + 0]);
-        glm_vec2_copy(ps, sc_verts[p + 1]);
-        glm_vec2_copy(pw, sc_verts[p + 2]);
-        glm_vec2_copy(ph, sc_verts[p + 3]);
-    }
-
-    for(u32 i = 0; i < shadow_caster_count * 4; ++i) {
-        // get angle
-        f32 angle = atan2f(position[1] - sc_verts[i][1], position[0] - sc_verts[i][0]);
-        vec2 cast_position;
-        glm_vec2_copy(position, cast_position);
-        while(glm_vec2_distance(cast_position, position) < radius) {
-            b32 col = false;
-            for(u32 caster_index = 0; caster_index < shadow_caster_count; ++caster_index) {
-                cast_position[0] -= cosf(angle) * cast_step;
-                cast_position[1] -= sinf(angle) * cast_step;
-                if(pointInQuad(cast_position, &(shadow_casters[caster_index]))) {
-                    printf("FUCK\n");
-                    printf("%d, %f, %f\n", i, cast_position[0], cast_position[1]);
-                    col = true;
+    for (i32 i = 0; i < resolution; ++i) {
+        circle_verts[i][0] = position[0];
+		circle_verts[i][1] = position[1];
+        f32 dist = 0.0f;
+        while(true) {
+            b32 broke = false;
+            for(i32 p = 0; p < shadow_caster_count; ++p) {
+                if(pointInQuad(circle_verts[i], &shadow_casters[p])) {
+                    broke = true;
                     break;
                 }
             }
-            if(col) {
+            if(broke) {
                 break;
             }
-            
+            circle_verts[i][0] += cosf(angle) * cast_step;
+		    circle_verts[i][1] += sinf(angle) * cast_step;
+            dist += cast_step;
+            if(dist > radius) {
+                break;
+            }
         }
-        glm_vec2_copy(cast_position, circle_verts[i]);
-
-    }
-    glm_vec2_copy(position, circle_verts[shadow_caster_count * 4]);
-    // gen indices
-	for (i32 i = 0; i < shadow_caster_count * 4; ++i) {
+		angle += max_angle / resolution;
+	}
+	glm_vec2_copy(center, circle_verts[resolution]);
+	for (i32 i = 0; i < resolution; ++i) {
 		// previous -> center -> next
 		i32 set = i * 3;
 		circle_indices[set] = i;
-		circle_indices[set + 1] = (i + 1) % shadow_caster_count * 4;
-		circle_indices[set + 2] = shadow_caster_count * 4;
+		circle_indices[set + 1] = (i + 1) % resolution;
+		circle_indices[set + 2] = resolution;
 	}
     struct LightMesh lm;
-    generateLightMeshGLObjects(&lm, circle_verts, shadow_caster_count * 4 + 1, circle_indices, shadow_caster_count * 4 * 3);
+    generateLightMeshGLObjects(&lm, circle_verts, resolution + 1, circle_indices, resolution * 3);
     free(circle_indices);
     free(circle_verts);
-    free(sc_verts);
     return lm;
 }
 

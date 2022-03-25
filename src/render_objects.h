@@ -10,6 +10,6 @@ struct LightMesh {
 };
 
 struct LightMesh lmGenerateLightMesh(struct Block* shadow_casters, u32 shadow_caster_count, vec2 position, f32 radius,
-						 f32 resolution);
+						 u32 resolution);
 void rDrawLightMesh(Renderer_t* renderer, struct LightMesh* lm);
 #endif
