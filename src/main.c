@@ -12,6 +12,7 @@
 #include "image.h"
 #include "renderer.h"
 #include "shader.h"
+#include "render_objects.h"
 
 int main() {
 	SDL_Init(SDL_INIT_VIDEO);
@@ -87,6 +88,9 @@ int main() {
 	u32 mouse_x, mouse_y;
 	rReloadShaders(&renderer);
 
+
+	struct LightMesh point = lmGenerateLightMesh(NULL, (vec2){640, 480}, 0, 0);
+
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 		while (SDL_PollEvent(&ev) != 0) {
@@ -160,6 +164,8 @@ int main() {
 		glm_scale(model, (vec3){100, 100, 0});
 		rDrawPrimitive(&renderer, circle_primitive, model,
 					   (vec4){1.0, 0, 0, 1.0});
+
+		rDrawLightMesh(&renderer, &point);
 
 		SDL_GL_SwapWindow(win);
 	}
