@@ -10,7 +10,7 @@ struct Block {
 	vec2 size;
 };
 
-bool pointInQuad(float px, float py, struct Block* q);
+bool pointInQuad(vec2 point, struct Block* q);
 
 
 #define u8 uint8_t

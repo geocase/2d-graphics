@@ -81,15 +81,23 @@ int main() {
 	SDL_Event ev;
 	b32 quit = false;
 
-	struct Block b = {
-		.position = {320, 240},
-		.size = {32, 32},
+	struct Block b[] = {
+		{
+		.position = {0, 240},
+		.size = {32, 32}
+		},
+		{
+		.position = {10, 240},
+		.size = {32, 32}
+		},
+		{
+		.position = {100, 480},
+		.size = {100, 32}
+		},
 	};
 	u32 mouse_x, mouse_y;
 	rReloadShaders(&renderer);
 
-
-	struct LightMesh point = lmGenerateLightMesh(NULL, (vec2){640, 480}, 0, 0);
 
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
@@ -115,55 +123,60 @@ int main() {
 				break;
 			}
 		}
-
-		glm_mat4_identity(model);
-		glm_translate(model, (vec3){b.position[0], b.position[1], 0});
-		glm_scale(model, (vec3){b.size[0] / 2.0f, b.size[1] / 2.0f, 1.0f});
-
+		b[0].position[0] = mouse_x;
+		b[0].position[1] = mouse_y;
 		glClear(GL_COLOR_BUFFER_BIT);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, spr_counting.texture_idx);
+		for(i32 i = 0; i < 3; ++i) {
+			glm_mat4_identity(model);
+			glm_translate(model, (vec3){b[i].position[0], b[i].position[1], 0});
+			glm_scale(model, (vec3){b[i].size[0] / 2.0f, b[i].size[1] / 2.0f, 1.0f});
 
-		shdUseShader(&renderer.shaders[SHADER_SPRITE]);
+			
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, spr_counting.texture_idx);
 
-		glBindVertexArray(renderer.sprite_gl.vao);
-		spr_counting.current_frame = (SDL_GetTicks64() / 1000) % 4;
-		glUniform4f(glGetUniformLocation(
-						renderer.shaders[SHADER_SPRITE].program_idx, "color"),
-					1.0f, 0.0f, 0.0f, 1.0f);
-		glUniformMatrix4fv(
-			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
-								 "model"),
-			1, GL_FALSE, model);
-		glUniformMatrix4fv(
-			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
-								 "projection"),
-			1, GL_FALSE, renderer.projection);
-		glUniformMatrix4fv(
-			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
-								 "view"),
-			1, GL_FALSE, renderer.view);
-		glUniform1i(glGetUniformLocation(
-						renderer.shaders[SHADER_SPRITE].program_idx, "sprite"),
-					0);
-		glUniform1i(glGetUniformLocation(
-						renderer.shaders[SHADER_SPRITE].program_idx, "frame"),
-					spr_counting.current_frame);
-		glUniform2fv(
-			glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
-								 "frame_dimensions"),
+			shdUseShader(&renderer.shaders[SHADER_SPRITE]);
+
+			glBindVertexArray(renderer.sprite_gl.vao);
+			spr_counting.current_frame = (SDL_GetTicks64() / 1000) % 4;
+			glUniform4f(glGetUniformLocation(
+							renderer.shaders[SHADER_SPRITE].program_idx, "color"),
+						1.0f, 0.0f, 0.0f, 1.0f);
+			glUniformMatrix4fv(
+				glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
+									"model"),
+				1, GL_FALSE, model);
+			glUniformMatrix4fv(
+				glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
+									"projection"),
+				1, GL_FALSE, renderer.projection);
+			glUniformMatrix4fv(
+				glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
+									"view"),
+				1, GL_FALSE, renderer.view);
+			glUniform1i(glGetUniformLocation(
+							renderer.shaders[SHADER_SPRITE].program_idx, "sprite"),
+						0);
+			glUniform1i(glGetUniformLocation(
+							renderer.shaders[SHADER_SPRITE].program_idx, "frame"),
+						spr_counting.current_frame);
+			glUniform2fv(
+				glGetUniformLocation(renderer.shaders[SHADER_SPRITE].program_idx,
+									"frame_dimensions"),
 			1, frame_dimensions);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.sprite_gl.ebo);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
+			glActiveTexture(GL_TEXTURE0);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.sprite_gl.ebo);
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		}
 		glm_mat4_identity(model);
 
-		glm_translate(model, (vec3){mouse_x, mouse_y, 0});
-		glm_scale(model, (vec3){100, 100, 0});
-		rDrawPrimitive(&renderer, circle_primitive, model,
-					   (vec4){1.0, 0, 0, 1.0});
+		// glm_translate(model, (vec3){mouse_x, mouse_y, 0});
+		// glm_scale(model, (vec3){100, 100, 0});
+		// rDrawPrimitive(&renderer, circle_primitive, model,
+		// 			   (vec4){1.0, 0, 0, 1.0});
+		struct LightMesh point = lmGenerateLightMesh(b, 3, (vec2){640, 480}, 1000, 0);
+
 
 		rDrawLightMesh(&renderer, &point);
 
