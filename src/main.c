@@ -100,7 +100,7 @@ int main() {
 							 circle_indices, CIRCLE_RESOLUTION * 3);
 
 	Sprite_t spr_counting =
-		img_loadSprite("spr_sheet.bmp", 32, 32, 4, 1.0f / 10.0f, 0);
+		imgLoadSprite("spr_sheet.bmp", 32, 32, 4, 1.0f / 10.0f, 0);
 
 	vec2 frame_dimensions = {spr_counting.tw / spr_counting.w,
 							 spr_counting.th / spr_counting.h};

@@ -2,7 +2,7 @@
 #include <SDL.h>
 #include <glad/glad.h>
 
-Sprite_t img_loadSprite(const char *path, f32 frame_width, f32 frame_height,
+Sprite_t imgLoadSprite(const char *path, f32 frame_width, f32 frame_height,
 						u16 max_frames, f32 frame_time, u16 flags) {
 	SDL_Surface *texture =
 		SDL_ConvertSurface(SDL_LoadBMP("spr_sheet.bmp"),
