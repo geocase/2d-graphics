@@ -150,6 +150,8 @@ int main() {
 
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
+		mouse_x /= renderer.size[0] / BUFFER_X;
+		mouse_y /= renderer.size[1] / BUFFER_Y;
 		while (SDL_PollEvent(&ev) != 0) {
 			switch (ev.type) {
 			case SDL_QUIT:
