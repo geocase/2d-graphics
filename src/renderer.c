@@ -74,7 +74,6 @@ void rReloadShaders(Renderer_t *renderer) {
 
 void rResize(Renderer_t *renderer, int w, int h) {
 	glViewport(0, 0, w, h);
-	glm_ortho(0, w, h, 0, -1.0, 1.0, renderer->projection);
 	renderer->size[0] = w;
 	renderer->size[1] = h;
 	return;

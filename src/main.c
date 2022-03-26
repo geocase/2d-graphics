@@ -14,6 +14,10 @@
 #include "renderer.h"
 #include "shader.h"
 
+#define BUFFER_Y 240
+#define BUFFER_X 426
+
+
 int main() {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_Window *win = SDL_CreateWindow(
@@ -82,12 +86,67 @@ int main() {
 	b32 quit = false;
 
 	struct Block b[] = {
-		{.position = {600, 400}, .size = {32, 32}},
-		{.position = {600, 400}, .size = {32, 32}},
+		{.position = {0, 0}, .size = {32, 32}},
+		{.position = {0, 0}, .size = {32, 32}},
 		{.position = {100, 480}, .size = {100, 32}},
 	};
 	u32 mouse_x, mouse_y;
 	rReloadShaders(&renderer);
+
+	u32 fbo;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	u32 fbo_texture;
+	glGenTextures(1, &fbo_texture);
+	glBindTexture(GL_TEXTURE_2D, fbo_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, BUFFER_X, BUFFER_Y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_texture, 0);
+
+	u32 rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, BUFFER_X, BUFFER_Y);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+	int p = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+ 	if(p != GL_FRAMEBUFFER_COMPLETE) {
+		 printf("%d\n", p);
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	f32 vertices[] = {-1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0,
+					  -1.0, 1.0,  0.0, 1.0, 1.0, 1.0,  1.0, 1.0};
+
+	u32 indices[] = {0, 1, 2, 1, 3, 2};
+	u32 fbo_vao;
+	u32 fbo_vbo;
+	u32 fbo_ebo;
+	glGenVertexArrays(1, &fbo_vao);
+	glBindVertexArray(fbo_vao);
+
+	glGenBuffers(1, &fbo_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, fbo_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(f32) * 4, (void *)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(f32) * 4,
+						  (void *)(sizeof(f32) * 2));
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	glGenBuffers(1, &fbo_ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fbo_ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+				 GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	char* screen_shader_vs = readFilePathToCStr("shaders/buffer.vs");
+	char* screen_shader_fs = readFilePathToCStr("shaders/buffer.fs");
+	Shader_t screen_shader = shdNewShader(screen_shader_vs, screen_shader_fs);
 
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
@@ -106,8 +165,7 @@ int main() {
 					u32 x, y;
 					x = ev.window.data1;
 					y = ev.window.data2;
-					glViewport(0, 0, x, y);
-					glm_ortho(0, x, y, 0, -1.0, 1.0, renderer.projection);
+					rResize(&renderer, x, y);
 					break;
 				}
 				break;
@@ -115,7 +173,15 @@ int main() {
 		}
 		b[0].position[0] = mouse_x;
 		b[0].position[1] = mouse_y;
-		glClear(GL_COLOR_BUFFER_BIT);
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glViewport(0, 0, BUFFER_X, BUFFER_Y);
+		glm_ortho(0, BUFFER_X, BUFFER_Y, 0, -1.0, 1.0, renderer.projection);
+
+
+		glEnable(GL_DEPTH_TEST);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		for (i32 i = 0; i < 3; ++i) {
 			glm_mat4_identity(model);
 			glm_translate(model, (vec3){b[i].position[0], b[i].position[1], 0});
@@ -168,23 +234,41 @@ int main() {
 		// glm_scale(model, (vec3){100, 100, 0});
 		// rDrawPrimitive(&renderer, circle_primitive, model,
 		// 			   (vec4){1.0, 0, 0, 1.0});
-		struct LightMesh static_lm =
-			lmGenerateLightMesh(b, 3, (vec2){100, 100}, 9, 180);
+		// struct LightMesh static_lm =
+		// 	lmGenerateLightMesh(b, 3, (vec2){100, 100}, 9, 180);
 
-		struct LightMesh point =
-			lmGenerateLightMesh(b, 3, (vec2){mouse_x, mouse_y}, 500, 10);
-		struct LightMesh point1 =
-			lmGenerateLightMesh(b, 3, (vec2){640, 320}, 500, 40);
-		struct LightMesh point2 =
-			lmGenerateLightMesh(b, 3, (vec2){640, 0}, 500, 40);
-		struct LightMesh point3 =
-			lmGenerateLightMesh(b, 3, (vec2){2, 480}, 500, 40);
+		// struct LightMesh point =
+		// 	lmGenerateLightMesh(b, 3, (vec2){mouse_x, mouse_y}, 500, 10);
+		// struct LightMesh point1 =
+		// 	lmGenerateLightMesh(b, 3, (vec2){640, 320}, 500, 40);
+		// struct LightMesh point2 =
+		// 	lmGenerateLightMesh(b, 3, (vec2){640, 0}, 500, 40);
+		// struct LightMesh point3 =
+		// 	lmGenerateLightMesh(b, 3, (vec2){2, 480}, 500, 40);
 
-		rDrawLightMesh(&renderer, &point);
-		rDrawLightMesh(&renderer, &point1);
-		rDrawLightMesh(&renderer, &point2);
-		rDrawLightMesh(&renderer, &point3);
-		rDrawLightMesh(&renderer, &static_lm);
+		// rDrawLightMesh(&renderer, &point);
+		// rDrawLightMesh(&renderer, &point1);
+		// rDrawLightMesh(&renderer, &point2);
+		// rDrawLightMesh(&renderer, &point3);
+		// rDrawLightMesh(&renderer, &static_lm);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, renderer.size[0], renderer.size[1]);
+
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); 
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+
+		// glm_mat4_identity(model);
+		// glm_translate(model, (vec3){0, 0, 0});
+		// glm_scale(model, (vec3){100, 100, 1});
+		// rDrawPrimitive(&renderer, circle_primitive, model, (vec4){1.0, 0, 0, 1.0});
+
+		shdUseShader(&screen_shader);
+		glBindVertexArray(fbo_vao);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fbo_ebo);
+		glBindTexture(GL_TEXTURE_2D, fbo_texture);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		SDL_GL_SwapWindow(win);
 	}
