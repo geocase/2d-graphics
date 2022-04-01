@@ -140,50 +140,7 @@ int main() {
 		rClear(&renderer);
 
 		for (i32 i = 0; i < 3; ++i) {
-			glm_mat4_identity(model);
-			glm_translate(model, (vec3){b[i].position[0], b[i].position[1], 0});
-			glm_scale(model,
-					  (vec3){b[i].size[0] / 2.0f, b[i].size[1] / 2.0f, 1.0f});
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, spr_counting.texture_idx);
-
-			shdUseShader(&renderer.shaders[SHADER_SPRITE]);
-
-			glBindVertexArray(renderer.sprite_gl.vao);
-			// spr_counting.current_frame = (SDL_GetTicks64() / 1000) % 0;
-			glUniform4f(
-				glGetUniformLocation(
-					renderer.shaders[SHADER_SPRITE].program_idx, "color"),
-				1.0f, 0.0f, 0.0f, 1.0f);
-			glUniformMatrix4fv(
-				glGetUniformLocation(
-					renderer.shaders[SHADER_SPRITE].program_idx, "model"),
-				1, GL_FALSE, model);
-			glUniformMatrix4fv(
-				glGetUniformLocation(
-					renderer.shaders[SHADER_SPRITE].program_idx, "projection"),
-				1, GL_FALSE, renderer.projection);
-			glUniformMatrix4fv(
-				glGetUniformLocation(
-					renderer.shaders[SHADER_SPRITE].program_idx, "view"),
-				1, GL_FALSE, renderer.view);
-			glUniform1i(
-				glGetUniformLocation(
-					renderer.shaders[SHADER_SPRITE].program_idx, "sprite"),
-				0);
-			glUniform1i(
-				glGetUniformLocation(
-					renderer.shaders[SHADER_SPRITE].program_idx, "frame"),
-				spr_counting.current_frame);
-			glUniform2fv(glGetUniformLocation(
-							 renderer.shaders[SHADER_SPRITE].program_idx,
-							 "frame_dimensions"),
-						 1, frame_dimensions);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.sprite_gl.ebo);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			rDrawSprite(&renderer, &spr_counting, b[i].position, (vec2){1, 1});
 		}
 		struct LightMesh point3 =
 			lmGenerateLightMesh(b, 3, (vec2){50, 50}, 100, 9999);

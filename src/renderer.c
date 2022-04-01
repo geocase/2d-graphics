@@ -132,6 +132,53 @@ void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
 	return;
 }
 
+void rDrawSprite(Renderer_t *renderer, Sprite_t *sprite, vec2 position,
+				 vec2 scale) {
+	mat4 model;
+	glm_mat4_identity(model);
+	glm_translate(model, (vec3){position[0], position[1], 0});
+	glm_scale(model, (vec3){(sprite->w * scale[0]) / 2.0f,
+							(sprite->h * scale[1]) / 2.0f, 1.0f});
+
+	vec2 frame_dimensions = {sprite->tw / sprite->w, sprite->th / sprite->h};
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, sprite->texture_idx);
+
+	shdUseShader(&renderer->shaders[SHADER_SPRITE]);
+
+	glBindVertexArray(renderer->sprite_gl.vao);
+	glUniform4f(glGetUniformLocation(
+					renderer->shaders[SHADER_SPRITE].program_idx, "color"),
+				1.0f, 0.0f, 0.0f, 1.0f);
+	glUniformMatrix4fv(
+		glGetUniformLocation(renderer->shaders[SHADER_SPRITE].program_idx,
+							 "model"),
+		1, GL_FALSE, model);
+	glUniformMatrix4fv(
+		glGetUniformLocation(renderer->shaders[SHADER_SPRITE].program_idx,
+							 "projection"),
+		1, GL_FALSE, renderer->projection);
+	glUniformMatrix4fv(
+		glGetUniformLocation(renderer->shaders[SHADER_SPRITE].program_idx,
+							 "view"),
+		1, GL_FALSE, renderer->view);
+	glUniform1i(glGetUniformLocation(
+					renderer->shaders[SHADER_SPRITE].program_idx, "sprite"),
+				0);
+	glUniform1i(glGetUniformLocation(
+					renderer->shaders[SHADER_SPRITE].program_idx, "frame"),
+				sprite->current_frame);
+	glUniform2fv(
+		glGetUniformLocation(renderer->shaders[SHADER_SPRITE].program_idx,
+							 "frame_dimensions"),
+		1, frame_dimensions);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->sprite_gl.ebo);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
 void rGenerateFrameBuffer(Renderer_t *renderer, vec2 size, u32 framebuffer_idx,
 						  Shader_t shader) {
 

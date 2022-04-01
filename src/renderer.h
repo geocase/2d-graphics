@@ -3,6 +3,7 @@
 #include <cglm/cglm.h>
 
 #include "common.h"
+#include "image.h"
 #include "shader.h"
 
 typedef struct {
@@ -45,11 +46,16 @@ typedef struct {
 
 void rGenerateSpriteGLIndices(Renderer_t *renderer);
 void rGenerateFramebufferGLIndices(Renderer_t *renderer);
+void rGenerateFrameBuffer(Renderer_t *renderer, vec2 size, u32 framebuffer_idx);
 void rReloadShaders(Renderer_t *renderer);
-void rResize(Renderer_t *renderer, int w, int h);
+
 void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
 					mat4 model, vec4 color);
-void rGenerateFrameBuffer(Renderer_t *renderer, vec2 size, u32 framebuffer_idx);
+
+// void rDrawSprite(Renderer_t* renderer, Sprite_t* sprite, vec2 position, vec2
+// scale);
+
+void rResize(Renderer_t *renderer, int w, int h);
 void rSwapFrameBuffer(Renderer_t *renderer, u32 framebuffer_idx);
 void rDrawFrameBuffer(Renderer_t *renderer, u32 framebuffer_idx);
 void rClear(Renderer_t *renderer);
