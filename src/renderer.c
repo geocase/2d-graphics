@@ -3,7 +3,6 @@
 #include "fio.h"
 #include "renderer.h"
 
-
 void rGenerateFramebufferGLIndices(Renderer_t *renderer) {
 	f32 vertices[] = {-1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0,
 					  -1.0, 1.0,  0.0, 1.0, 1.0, 1.0,  1.0, 1.0};
@@ -135,11 +134,10 @@ void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
 
 void rGenerateFrameBuffer(Renderer_t *renderer, vec2 size, u32 framebuffer_idx,
 						  Shader_t shader) {
-							  
+
 	renderer->framebuffers[framebuffer_idx].shader = shader;
-	// glm_vec2_copy(size, renderer->framebuffers[framebuffer_idx].size);
+	glm_vec2_copy(size, renderer->framebuffers[framebuffer_idx].size);
 	renderer->framebuffers[framebuffer_idx].size[0] = size[0];
-	renderer->framebuffers[framebuffer_idx].size[1] = size[1];
 	glGenFramebuffers(1, &renderer->framebuffers[framebuffer_idx].index);
 	glBindFramebuffer(GL_FRAMEBUFFER,
 					  renderer->framebuffers[framebuffer_idx].index);
