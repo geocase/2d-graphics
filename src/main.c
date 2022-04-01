@@ -6,6 +6,7 @@
 #include <cglm/cglm.h>
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
+#include <SDL_image.h>
 
 #include "common.h"
 #include "fio.h"
@@ -19,6 +20,7 @@
 
 int main() {
 	SDL_Init(SDL_INIT_VIDEO);
+	IMG_Init(IMG_INIT_PNG);
 	SDL_Window *win = SDL_CreateWindow(
 		"Platformer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720,
 		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
@@ -74,7 +76,7 @@ int main() {
 							 circle_indices, CIRCLE_RESOLUTION * 3);
 
 	Sprite_t spr_counting =
-		imgLoadSprite("spr_sheet.bmp", 32, 32, 4, 1.0f / 10.0f, 0);
+		imgLoadSprite("cowboy.png", 38, 38, 0, 1.0f / 10.0f, 0);
 
 	vec2 frame_dimensions = {spr_counting.tw / spr_counting.w,
 							 spr_counting.th / spr_counting.h};
@@ -132,6 +134,9 @@ int main() {
 		b[0].position[0] = mouse_x;
 		b[0].position[1] = mouse_y;
 		rSwapFrameBuffer(&renderer, FB_SCENE);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		rClear(&renderer);
 
 		for (i32 i = 0; i < 3; ++i) {
@@ -146,7 +151,7 @@ int main() {
 			shdUseShader(&renderer.shaders[SHADER_SPRITE]);
 
 			glBindVertexArray(renderer.sprite_gl.vao);
-			spr_counting.current_frame = (SDL_GetTicks64() / 1000) % 4;
+			// spr_counting.current_frame = (SDL_GetTicks64() / 1000) % 0;
 			glUniform4f(
 				glGetUniformLocation(
 					renderer.shaders[SHADER_SPRITE].program_idx, "color"),
