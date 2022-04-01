@@ -36,7 +36,7 @@ typedef struct {
 	Shader_t shaders[SHADER_MAX];
 	u32 current_framebuffer;
 	Framebuffer_t framebuffers[FB_MAX];
-	
+
 	struct SpriteGLIndices sprite_gl;
 	struct FramebufferRenderGLIndices fb_gl;
 
@@ -48,8 +48,8 @@ void rReloadShaders(Renderer_t *renderer);
 void rResize(Renderer_t *renderer, int w, int h);
 void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
 					mat4 model, vec4 color);
-void rGenerateFrameBuffer(Renderer_t* renderer, vec2 size, u32 framebuffer_idx);
-void rSwapFrameBuffer(Renderer_t* renderer, u32 framebuffer_idx);
-void rDrawFrameBuffer(Renderer_t* renderer, u32 framebuffer_idx);
-void rClear(Renderer_t* renderer);
+void rGenerateFrameBuffer(Renderer_t *renderer, vec2 size, u32 framebuffer_idx);
+void rSwapFrameBuffer(Renderer_t *renderer, u32 framebuffer_idx);
+void rDrawFrameBuffer(Renderer_t *renderer, u32 framebuffer_idx);
+void rClear(Renderer_t *renderer);
 #endif

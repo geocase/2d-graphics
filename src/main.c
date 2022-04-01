@@ -17,7 +17,6 @@
 #define BUFFER_Y 240
 #define BUFFER_X 426
 
-
 int main() {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_Window *win = SDL_CreateWindow(
@@ -95,16 +94,19 @@ int main() {
 	u32 mouse_x, mouse_y;
 	rReloadShaders(&renderer);
 
-	char* screen_shader_vs = readFilePathToCStr("shaders/buffer.vs");
-	char* screen_shader_fs = readFilePathToCStr("shaders/buffer.fs");
+	char *screen_shader_vs = readFilePathToCStr("shaders/buffer.vs");
+	char *screen_shader_fs = readFilePathToCStr("shaders/buffer.fs");
 	Shader_t screen_shader = shdNewShader(screen_shader_vs, screen_shader_fs);
 
-	rGenerateFrameBuffer(&renderer, (vec2){BUFFER_X, BUFFER_Y}, FB_SCENE, screen_shader);
+	rGenerateFrameBuffer(&renderer, (vec2){BUFFER_X, BUFFER_Y}, FB_SCENE,
+						 screen_shader);
 
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
-		mouse_x /= renderer.framebuffers[FB_WINDOW].size[0] / renderer.framebuffers[FB_SCENE].size[0];
-		mouse_y /= renderer.framebuffers[FB_WINDOW].size[1] / renderer.framebuffers[FB_SCENE].size[1];
+		mouse_x /= renderer.framebuffers[FB_WINDOW].size[0] /
+				   renderer.framebuffers[FB_SCENE].size[0];
+		mouse_y /= renderer.framebuffers[FB_WINDOW].size[1] /
+				   renderer.framebuffers[FB_SCENE].size[1];
 		while (SDL_PollEvent(&ev) != 0) {
 			switch (ev.type) {
 			case SDL_QUIT:

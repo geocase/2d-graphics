@@ -3,9 +3,9 @@
 #include "fio.h"
 #include "renderer.h"
 
-void rGenerateFramebufferGLObjects(Renderer_t* renderer);
+void rGenerateFramebufferGLObjects(Renderer_t *renderer);
 
-void rGenerateFramebufferGLObjects(Renderer_t* renderer) {
+void rGenerateFramebufferGLObjects(Renderer_t *renderer) {
 	f32 vertices[] = {-1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0,
 					  -1.0, 1.0,  0.0, 1.0, 1.0, 1.0,  1.0, 1.0};
 
@@ -31,7 +31,6 @@ void rGenerateFramebufferGLObjects(Renderer_t* renderer) {
 				 GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
-
 
 RenderPrimitive_t rpNewRenderPrimitive(f32 *verts, u32 vert_count, u32 *indices,
 									   u32 tri_count) {
@@ -135,50 +134,62 @@ void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
 	return;
 }
 
-void rGenerateFrameBuffer(Renderer_t* renderer, vec2 size, u32 framebuffer_idx, Shader_t shader) {
+void rGenerateFrameBuffer(Renderer_t *renderer, vec2 size, u32 framebuffer_idx,
+						  Shader_t shader) {
 	// temp
-			rGenerateFramebufferGLObjects(renderer);
+	rGenerateFramebufferGLObjects(renderer);
 	// temp
 	renderer->framebuffers[framebuffer_idx].shader = shader;
 	// glm_vec2_copy(size, renderer->framebuffers[framebuffer_idx].size);
 	renderer->framebuffers[framebuffer_idx].size[0] = size[0];
 	renderer->framebuffers[framebuffer_idx].size[1] = size[1];
 	glGenFramebuffers(1, &renderer->framebuffers[framebuffer_idx].index);
-	glBindFramebuffer(GL_FRAMEBUFFER, renderer->framebuffers[framebuffer_idx].index);
+	glBindFramebuffer(GL_FRAMEBUFFER,
+					  renderer->framebuffers[framebuffer_idx].index);
 
 	glGenTextures(1, &renderer->framebuffers[framebuffer_idx].texture);
-	glBindTexture(GL_TEXTURE_2D, renderer->framebuffers[framebuffer_idx].texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, renderer->framebuffers[framebuffer_idx].size[0], renderer->framebuffers[framebuffer_idx].size[1], 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glBindTexture(GL_TEXTURE_2D,
+				  renderer->framebuffers[framebuffer_idx].texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+				 renderer->framebuffers[framebuffer_idx].size[0],
+				 renderer->framebuffers[framebuffer_idx].size[1], 0, GL_RGB,
+				 GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderer->framebuffers[framebuffer_idx].texture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+						   renderer->framebuffers[framebuffer_idx].texture, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void rSwapFrameBuffer(Renderer_t* renderer, u32 framebuffer_idx) {
-	if(framebuffer_idx == FB_WINDOW) {
+void rSwapFrameBuffer(Renderer_t *renderer, u32 framebuffer_idx) {
+	if (framebuffer_idx == FB_WINDOW) {
 		glDisable(GL_DEPTH_TEST);
 	} else {
 		glEnable(GL_DEPTH_TEST);
 	}
-	glBindFramebuffer(GL_FRAMEBUFFER, renderer->framebuffers[framebuffer_idx].index);
-	glViewport(0, 0, renderer->framebuffers[framebuffer_idx].size[0], renderer->framebuffers[framebuffer_idx].size[1]);
-	glm_ortho(0, renderer->framebuffers[framebuffer_idx].size[0], renderer->framebuffers[framebuffer_idx].size[1], 0, -1, 1.0, renderer->projection);
+	glBindFramebuffer(GL_FRAMEBUFFER,
+					  renderer->framebuffers[framebuffer_idx].index);
+	glViewport(0, 0, renderer->framebuffers[framebuffer_idx].size[0],
+			   renderer->framebuffers[framebuffer_idx].size[1]);
+	glm_ortho(0, renderer->framebuffers[framebuffer_idx].size[0],
+			  renderer->framebuffers[framebuffer_idx].size[1], 0, -1, 1.0,
+			  renderer->projection);
 	renderer->current_framebuffer = framebuffer_idx;
 }
 
-void rDrawFrameBuffer(Renderer_t* renderer, u32 framebuffer_idx) {
+void rDrawFrameBuffer(Renderer_t *renderer, u32 framebuffer_idx) {
 	shdUseShader(&renderer->framebuffers[framebuffer_idx].shader);
 	glBindVertexArray(renderer->fb_gl.vao);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->fb_gl.ebo);
-	glBindTexture(GL_TEXTURE_2D, renderer->framebuffers[framebuffer_idx].texture);
+	glBindTexture(GL_TEXTURE_2D,
+				  renderer->framebuffers[framebuffer_idx].texture);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
-void rClear(Renderer_t* renderer) {
+void rClear(Renderer_t *renderer) {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
