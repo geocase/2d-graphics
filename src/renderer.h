@@ -44,6 +44,7 @@ typedef struct {
 } Renderer_t;
 
 void rGenerateSpriteGLIndices(Renderer_t *renderer);
+void rGenerateFramebufferGLIndices(Renderer_t *renderer);
 void rReloadShaders(Renderer_t *renderer);
 void rResize(Renderer_t *renderer, int w, int h);
 void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,

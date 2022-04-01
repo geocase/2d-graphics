@@ -48,7 +48,7 @@ int main() {
 	}
 
 	rGenerateSpriteGLIndices(&renderer);
-
+	rGenerateFramebufferGLIndices(&renderer);
 #define CIRCLE_RESOLUTION 50
 	vec2 circle_verts[CIRCLE_RESOLUTION + 1];
 	u32 circle_indices[CIRCLE_RESOLUTION * 3];

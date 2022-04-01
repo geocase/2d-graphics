@@ -3,9 +3,8 @@
 #include "fio.h"
 #include "renderer.h"
 
-void rGenerateFramebufferGLObjects(Renderer_t *renderer);
 
-void rGenerateFramebufferGLObjects(Renderer_t *renderer) {
+void rGenerateFramebufferGLIndices(Renderer_t *renderer) {
 	f32 vertices[] = {-1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0,
 					  -1.0, 1.0,  0.0, 1.0, 1.0, 1.0,  1.0, 1.0};
 
@@ -136,9 +135,7 @@ void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
 
 void rGenerateFrameBuffer(Renderer_t *renderer, vec2 size, u32 framebuffer_idx,
 						  Shader_t shader) {
-	// temp
-	rGenerateFramebufferGLObjects(renderer);
-	// temp
+							  
 	renderer->framebuffers[framebuffer_idx].shader = shader;
 	// glm_vec2_copy(size, renderer->framebuffers[framebuffer_idx].size);
 	renderer->framebuffers[framebuffer_idx].size[0] = size[0];
