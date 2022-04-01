@@ -14,8 +14,8 @@ void rGenerateFramebufferGLObjects(Renderer_t* renderer) {
 	glGenVertexArrays(1, &renderer->fb_gl.vao);
 	glBindVertexArray(renderer->fb_gl.vao);
 
-	glGenBuffers(1, &renderer->fb_gl.vao);
-	glBindBuffer(GL_ARRAY_BUFFER, renderer->fb_gl.vao);
+	glGenBuffers(1, &renderer->fb_gl.vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, renderer->fb_gl.vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(f32) * 4, (void *)0);
@@ -104,8 +104,8 @@ void rReloadShaders(Renderer_t *renderer) {
 
 void rResize(Renderer_t *renderer, int w, int h) {
 	glViewport(0, 0, w, h);
-	renderer->size[FB_WINDOW][0] = w;
-	renderer->size[FB_WINDOW][1] = h;
+	renderer->framebuffers[FB_WINDOW].size[0] = w;
+	renderer->framebuffers[FB_WINDOW].size[1] = h;
 	return;
 }
 
@@ -140,7 +140,9 @@ void rGenerateFrameBuffer(Renderer_t* renderer, vec2 size, u32 framebuffer_idx, 
 			rGenerateFramebufferGLObjects(renderer);
 	// temp
 	renderer->framebuffers[framebuffer_idx].shader = shader;
-	glm_vec2_copy(size, renderer->framebuffers[framebuffer_idx].size);
+	// glm_vec2_copy(size, renderer->framebuffers[framebuffer_idx].size);
+	renderer->framebuffers[framebuffer_idx].size[0] = size[0];
+	renderer->framebuffers[framebuffer_idx].size[1] = size[1];
 	glGenFramebuffers(1, &renderer->framebuffers[framebuffer_idx].index);
 	glBindFramebuffer(GL_FRAMEBUFFER, renderer->framebuffers[framebuffer_idx].index);
 
@@ -154,4 +156,29 @@ void rGenerateFrameBuffer(Renderer_t* renderer, vec2 size, u32 framebuffer_idx, 
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void rSwapFrameBuffer(Renderer_t* renderer, u32 framebuffer_idx) {
+	if(framebuffer_idx == FB_WINDOW) {
+		glDisable(GL_DEPTH_TEST);
+	} else {
+		glEnable(GL_DEPTH_TEST);
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, renderer->framebuffers[framebuffer_idx].index);
+	glViewport(0, 0, renderer->framebuffers[framebuffer_idx].size[0], renderer->framebuffers[framebuffer_idx].size[1]);
+	glm_ortho(0, renderer->framebuffers[framebuffer_idx].size[0], renderer->framebuffers[framebuffer_idx].size[1], 0, -1, 1.0, renderer->projection);
+	renderer->current_framebuffer = framebuffer_idx;
+}
+
+void rDrawFrameBuffer(Renderer_t* renderer, u32 framebuffer_idx) {
+	shdUseShader(&renderer->framebuffers[framebuffer_idx].shader);
+	glBindVertexArray(renderer->fb_gl.vao);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->fb_gl.ebo);
+	glBindTexture(GL_TEXTURE_2D, renderer->framebuffers[framebuffer_idx].texture);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+void rClear(Renderer_t* renderer) {
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

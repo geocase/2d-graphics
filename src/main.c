@@ -25,7 +25,7 @@ int main() {
 		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
 						SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
@@ -38,6 +38,8 @@ int main() {
 	}
 
 	Renderer_t renderer;
+	renderer.framebuffers[FB_WINDOW].index = 0;
+	rSwapFrameBuffer(&renderer, FB_WINDOW);
 	glm_mat4_identity(renderer.view);
 
 	{
@@ -101,8 +103,8 @@ int main() {
 
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
-		mouse_x /= renderer.size[FB_WINDOW][0] / BUFFER_X;
-		mouse_y /= renderer.size[FB_WINDOW][1] / BUFFER_Y;
+		mouse_x /= renderer.framebuffers[FB_WINDOW].size[0] / renderer.framebuffers[FB_SCENE].size[0];
+		mouse_y /= renderer.framebuffers[FB_WINDOW].size[1] / renderer.framebuffers[FB_SCENE].size[1];
 		while (SDL_PollEvent(&ev) != 0) {
 			switch (ev.type) {
 			case SDL_QUIT:
@@ -115,6 +117,7 @@ int main() {
 			case SDL_WINDOWEVENT:
 				switch (ev.window.event) {
 				case SDL_WINDOWEVENT_RESIZED:
+					rSwapFrameBuffer(&renderer, FB_WINDOW);
 					u32 x, y;
 					x = ev.window.data1;
 					y = ev.window.data2;
@@ -126,15 +129,9 @@ int main() {
 		}
 		b[0].position[0] = mouse_x;
 		b[0].position[1] = mouse_y;
-		glBindFramebuffer(GL_FRAMEBUFFER, renderer.framebuffers[FB_SCENE].index);
-		glViewport(0, 0, renderer.framebuffers[FB_SCENE].size[0], renderer.framebuffers[FB_SCENE].size[1]);
-		glm_ortho(0, renderer.framebuffers[FB_SCENE].size[0], renderer.framebuffers[FB_SCENE].size[1], 0, -1, 1.0, renderer.projection);
+		rSwapFrameBuffer(&renderer, FB_SCENE);
+		rClear(&renderer);
 
-
-		glEnable(GL_DEPTH_TEST);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		for (i32 i = 0; i < 3; ++i) {
 			glm_mat4_identity(model);
 			glm_translate(model, (vec3){b[i].position[0], b[i].position[1], 0});
@@ -181,47 +178,15 @@ int main() {
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.sprite_gl.ebo);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		}
-		glm_mat4_identity(model);
+		struct LightMesh point3 =
+			lmGenerateLightMesh(b, 3, (vec2){50, 50}, 100, 9999);
 
-		// glm_translate(model, (vec3){mouse_x, mouse_y, 0});
-		// glm_scale(model, (vec3){100, 100, 0});
-		// rDrawPrimitive(&renderer, circle_primitive, model,
-		// 			   (vec4){1.0, 0, 0, 1.0});
-		// struct LightMesh static_lm =
-		// 	lmGenerateLightMesh(b, 3, (vec2){100, 100}, 9, 180);
+		rDrawLightMesh(&renderer, &point3);
 
-		// struct LightMesh point =
-		// 	lmGenerateLightMesh(b, 3, (vec2){mouse_x, mouse_y}, 500, 10);
-		// struct LightMesh point1 =
-		// 	lmGenerateLightMesh(b, 3, (vec2){640, 320}, 500, 40);
-		// struct LightMesh point2 =
-		// 	lmGenerateLightMesh(b, 3, (vec2){640, 0}, 500, 40);
-		// struct LightMesh point3 =
-		// 	lmGenerateLightMesh(b, 3, (vec2){2, 480}, 500, 40);
+		rSwapFrameBuffer(&renderer, FB_WINDOW);
+		// rClear(&renderer);
 
-		// rDrawLightMesh(&renderer, &point);
-		// rDrawLightMesh(&renderer, &point1);
-		// rDrawLightMesh(&renderer, &point2);
-		// rDrawLightMesh(&renderer, &point3);
-		// rDrawLightMesh(&renderer, &static_lm);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, renderer.size[FB_WINDOW][0], renderer.size[FB_WINDOW][1]);
-
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); 
-		glClear(GL_COLOR_BUFFER_BIT);
-		glDisable(GL_DEPTH_TEST);
-
-		// glm_mat4_identity(model);
-		// glm_translate(model, (vec3){0, 0, 0});
-		// glm_scale(model, (vec3){100, 100, 1});
-		// rDrawPrimitive(&renderer, circle_primitive, model, (vec4){1.0, 0, 0, 1.0});
-
-		shdUseShader(&renderer.framebuffers[FB_SCENE].shader);
-		glBindVertexArray(renderer.fb_gl.vao);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.fb_gl.ebo);
-		glBindTexture(GL_TEXTURE_2D, renderer.framebuffers[FB_SCENE].texture);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		rDrawFrameBuffer(&renderer, FB_SCENE);
 
 		SDL_GL_SwapWindow(win);
 	}
