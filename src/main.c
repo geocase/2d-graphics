@@ -93,65 +93,16 @@ int main() {
 	u32 mouse_x, mouse_y;
 	rReloadShaders(&renderer);
 
-	u32 fbo;
-	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-	u32 fbo_texture;
-	glGenTextures(1, &fbo_texture);
-	glBindTexture(GL_TEXTURE_2D, fbo_texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, BUFFER_X, BUFFER_Y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_texture, 0);
-
-	u32 rbo;
-	glGenRenderbuffers(1, &rbo);
-	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, BUFFER_X, BUFFER_Y);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-	int p = glCheckFramebufferStatus(GL_FRAMEBUFFER);
- 	if(p != GL_FRAMEBUFFER_COMPLETE) {
-		 printf("%d\n", p);
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	f32 vertices[] = {-1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0,
-					  -1.0, 1.0,  0.0, 1.0, 1.0, 1.0,  1.0, 1.0};
-
-	u32 indices[] = {0, 1, 2, 1, 3, 2};
-	u32 fbo_vao;
-	u32 fbo_vbo;
-	u32 fbo_ebo;
-	glGenVertexArrays(1, &fbo_vao);
-	glBindVertexArray(fbo_vao);
-
-	glGenBuffers(1, &fbo_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, fbo_vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(f32) * 4, (void *)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(f32) * 4,
-						  (void *)(sizeof(f32) * 2));
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
-	glGenBuffers(1, &fbo_ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fbo_ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-				 GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
 	char* screen_shader_vs = readFilePathToCStr("shaders/buffer.vs");
 	char* screen_shader_fs = readFilePathToCStr("shaders/buffer.fs");
 	Shader_t screen_shader = shdNewShader(screen_shader_vs, screen_shader_fs);
 
+	rGenerateFrameBuffer(&renderer, (vec2){BUFFER_X, BUFFER_Y}, FB_SCENE, screen_shader);
+
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
-		mouse_x /= renderer.size[0] / BUFFER_X;
-		mouse_y /= renderer.size[1] / BUFFER_Y;
+		mouse_x /= renderer.size[FB_WINDOW][0] / BUFFER_X;
+		mouse_y /= renderer.size[FB_WINDOW][1] / BUFFER_Y;
 		while (SDL_PollEvent(&ev) != 0) {
 			switch (ev.type) {
 			case SDL_QUIT:
@@ -175,9 +126,9 @@ int main() {
 		}
 		b[0].position[0] = mouse_x;
 		b[0].position[1] = mouse_y;
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-		glViewport(0, 0, BUFFER_X, BUFFER_Y);
-		glm_ortho(0, BUFFER_X, BUFFER_Y, 0, -1.0, 1.0, renderer.projection);
+		glBindFramebuffer(GL_FRAMEBUFFER, renderer.framebuffers[FB_SCENE].index);
+		glViewport(0, 0, renderer.framebuffers[FB_SCENE].size[0], renderer.framebuffers[FB_SCENE].size[1]);
+		glm_ortho(0, renderer.framebuffers[FB_SCENE].size[0], renderer.framebuffers[FB_SCENE].size[1], 0, -1, 1.0, renderer.projection);
 
 
 		glEnable(GL_DEPTH_TEST);
@@ -255,7 +206,7 @@ int main() {
 		// rDrawLightMesh(&renderer, &static_lm);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, renderer.size[0], renderer.size[1]);
+		glViewport(0, 0, renderer.size[FB_WINDOW][0], renderer.size[FB_WINDOW][1]);
 
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); 
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -266,10 +217,10 @@ int main() {
 		// glm_scale(model, (vec3){100, 100, 1});
 		// rDrawPrimitive(&renderer, circle_primitive, model, (vec4){1.0, 0, 0, 1.0});
 
-		shdUseShader(&screen_shader);
-		glBindVertexArray(fbo_vao);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fbo_ebo);
-		glBindTexture(GL_TEXTURE_2D, fbo_texture);
+		shdUseShader(&renderer.framebuffers[FB_SCENE].shader);
+		glBindVertexArray(renderer.fb_gl.vao);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.fb_gl.ebo);
+		glBindTexture(GL_TEXTURE_2D, renderer.framebuffers[FB_SCENE].texture);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		SDL_GL_SwapWindow(win);
