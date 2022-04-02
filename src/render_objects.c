@@ -5,34 +5,42 @@
 
 void generateLightMeshGLObjects(struct LightMesh *lm, f32 *verts,
 								u32 vert_count, u32 *indices, u32 tri_count) {
-	glGenVertexArrays(1, &lm->vao);
+
+	// Test if VAO is already created
 	glBindVertexArray(lm->vao);
-	glGenBuffers(1, &lm->vbo);
+	if (!glIsVertexArray(lm->vao)) {
+		glGenVertexArrays(1, &lm->vao);
+	}
+	if (!glIsBuffer(lm->vbo)) {
+		glGenBuffers(1, &lm->vbo);
+	}
+	if (!glIsBuffer(lm->ebo)) {
+		glGenBuffers(1, &lm->ebo);
+	}
+
+	glBindVertexArray(lm->vao);
 	glBindBuffer(GL_ARRAY_BUFFER, lm->vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(f32) * vert_count * 2, verts,
-				 GL_STATIC_DRAW);
+				 GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(f32) * 2, (void *)0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	glGenBuffers(1, &lm->ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lm->ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * tri_count, indices,
-				 GL_STATIC_DRAW);
+				 GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	lm->tri_count = tri_count;
 	return;
 }
 
-struct LightMesh lmGenerateLightMesh(struct Block *shadow_casters,
-									 u32 shadow_caster_count, vec2 position,
-									 f32 radius, u32 resolution) {
-	// Just copy the circle primitive rendering code to test
+void lmGenerateLightMesh(struct Block *shadow_casters, u32 shadow_caster_count,
+						 vec2 position, f32 radius, u32 resolution,
+						 struct LightMesh *lm) {
 	const f32 cast_step = 5.0f;
 	vec2 *circle_verts = malloc(sizeof(vec2) * (resolution + 1));
 	u32 *circle_indices = malloc(sizeof(u32) * (resolution * 3));
-	;
 	vec2 center = {position[0], position[1]};
 	f32 angle = 0.0f;
 	f32 max_angle = 2.0f * M_PI;
@@ -68,12 +76,10 @@ struct LightMesh lmGenerateLightMesh(struct Block *shadow_casters,
 		circle_indices[set + 1] = (i + 1) % resolution;
 		circle_indices[set + 2] = resolution;
 	}
-	struct LightMesh lm;
-	generateLightMeshGLObjects(&lm, circle_verts, resolution + 1,
-							   circle_indices, resolution * 3);
+	generateLightMeshGLObjects(lm, circle_verts, resolution + 1, circle_indices,
+							   resolution * 3);
 	free(circle_indices);
 	free(circle_verts);
-	return lm;
 }
 
 void rDrawLightMesh(Renderer_t *renderer, struct LightMesh *lm) {

@@ -76,7 +76,7 @@ int main() {
 							 circle_indices, CIRCLE_RESOLUTION * 3);
 
 	Sprite_t spr_counting =
-		imgLoadSprite("cowboy.png", 38, 38, 0, 1.0f / 10.0f, 0);
+		imgLoadSprite("cowboy.png", 38, 38, 0, 1.0f / 10.0f, 1);
 
 	vec2 frame_dimensions = {spr_counting.tw / spr_counting.w,
 							 spr_counting.th / spr_counting.h};
@@ -102,6 +102,7 @@ int main() {
 
 	rGenerateFrameBuffer(&renderer, (vec2){BUFFER_X, BUFFER_Y}, FB_SCENE,
 						 screen_shader);
+	struct LightMesh point3;
 
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
@@ -140,11 +141,11 @@ int main() {
 		rClear(&renderer);
 
 		for (i32 i = 0; i < 3; ++i) {
+			spr_counting.current_frame = (SDL_GetTicks64() / 100) % 2;
 			rDrawSprite(&renderer, &spr_counting, b[i].position, (vec2){1, 1});
 		}
-		struct LightMesh point3 =
-			lmGenerateLightMesh(b, 3, (vec2){50, 50}, 100, 9999);
 
+		lmGenerateLightMesh(b, 3, (vec2){50, 50}, 100, 100, &point3);
 		rDrawLightMesh(&renderer, &point3);
 
 		rSwapFrameBuffer(&renderer, FB_WINDOW);

@@ -9,8 +9,8 @@ struct LightMesh {
 	u32 tri_count;
 };
 
-struct LightMesh lmGenerateLightMesh(struct Block *shadow_casters,
-									 u32 shadow_caster_count, vec2 position,
-									 f32 radius, u32 resolution);
+void lmGenerateLightMesh(struct Block *shadow_casters, u32 shadow_caster_count,
+						 vec2 position, f32 radius, u32 resolution,
+						 struct LightMesh *lm);
 void rDrawLightMesh(Renderer_t *renderer, struct LightMesh *lm);
 #endif
