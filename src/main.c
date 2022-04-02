@@ -82,6 +82,22 @@ int main() {
 		rpNewRenderPrimitive(circle_verts, CIRCLE_RESOLUTION + 1,
 							 circle_indices, CIRCLE_RESOLUTION * 3);
 
+
+	f32 uncentered_rectangle_verts[] = {
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f
+	};
+	u32 uncentered_rectangle_indices[] = {
+		0, 1, 3,
+		1, 2, 3
+	};
+
+	RenderPrimitive_t uncentered_rectangle_primitive =
+		rpNewRenderPrimitive(uncentered_rectangle_verts, 4,
+							 uncentered_rectangle_indices, 6);
+
 	Sprite_t spr_counting =
 		imgLoadSprite("64x64.png", 64, 64, 0, 1.0f / 1.0f, 0);
 
@@ -227,7 +243,11 @@ int main() {
 
 		rSwapFrameBuffer(&renderer, FB_SCENE);
 		rClear(&renderer);
-
+		mat4 model;
+		glm_mat4_identity(model);
+		glm_translate(model, (vec3){wall.min.x, wall.min.y, 0});
+		glm_scale(model, (vec3){wall.max.x - wall.min.x, wall.max.y - wall.min.y, 1});
+		rDrawPrimitive(&renderer, uncentered_rectangle_primitive, model, (vec4){1.0, 0, 0, 1.0});
 		rDrawSprite(&renderer, &spr_player, game.actors->position, (vec2){1, 1});
 
 		rSwapFrameBuffer(&renderer, FB_WINDOW);
