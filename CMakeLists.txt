@@ -11,6 +11,8 @@ link_directories(lib/SDL2_image-2.0.5/lib/x64)
 include_directories(lib/cglm-0.8.3/include)
 link_directories(lib/cglm-0.8.3/build)
 
+include_directories(lib/cute)
+
 include_directories(src)
 
 set(SOURCES src/main.c src/image.c src/shader.c src/fio.c src/renderer.c src/render_objects.c src/common.c src/game/input_state.c)

@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "cute_c2.h"
+#define CUTE_C2_IMPLEMENTATION
+
 #include <cglm/cglm.h>
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
@@ -82,6 +85,8 @@ int main() {
 	Sprite_t spr_counting =
 		imgLoadSprite("64x64.png", 64, 64, 0, 1.0f / 1.0f, 0);
 
+	Sprite_t spr_player = imgLoadSprite("cowboy.png", 38, 38, 1, 1.0f / 10.0f, 0);
+
 	mat4 model;
 	glm_mat4_identity(model);
 
@@ -89,11 +94,6 @@ int main() {
 	SDL_Event ev;
 	b32 quit = false;
 
-	struct Block b[] = {
-		{.position = {0, 0}, .size = {38, 38}},
-		{.position = {0, 0}, .size = {32, 32}},
-		{.position = {100, 480}, .size = {100, 32}},
-	};
 	u32 mouse_x, mouse_y;
 	rReloadShaders(&renderer);
 
@@ -109,6 +109,20 @@ int main() {
 		.input = {.buttons_state = 0},
 	};
 
+	game.actors[0].type = ACT_PLAYER;
+	game.actors[0].position[0] = 0;
+	game.actors[0].position[1] = 0;
+	game.actors[0].hitbox.min.x = game.actors[0].position[0];
+	game.actors[0].hitbox.min.y = game.actors[0].position[1];
+	game.actors[0].hitbox.max.x = game.actors[0].position[0] + 38;
+	game.actors[0].hitbox.max.y = game.actors[0].position[1] + 38;
+
+
+	c2AABB wall;
+	wall.min.x = 100;
+	wall.min.y = 10;
+	wall.max.x = 120;
+	wall.max.y = 10;
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 		mouse_x /= renderer.framebuffers[FB_WINDOW].size[0] /
@@ -180,33 +194,41 @@ int main() {
 				break;
 			}
 		}
-
+		vec2 velocity = {0, 0};
 		if (game.input.buttons_state & KM_RIGHT) {
-			b[0].position[0] += .1f;
+			velocity[0] += .1f;
 		}
 		if (game.input.buttons_state & KM_LEFT) {
-			b[0].position[0] -= .1f;
+			velocity[0] -= .1f;
 		}
 
 		if (game.input.buttons_state & KM_DOWN) {
-			b[0].position[1] += .1f;
+			velocity[1] += .1f;
 		}
 		if (game.input.buttons_state & KM_UP) {
-			b[0].position[1] -= .1f;
+			velocity[1] -= .1f;
 		}
+
+		game.actors[0].hitbox.min.x = game.actors[0].position[0] + velocity[0];
+		game.actors[0].hitbox.min.y = game.actors[0].position[1] + velocity[1];
+		game.actors[0].hitbox.max.x = game.actors[0].position[0] + 38;
+		game.actors[0].hitbox.max.y = game.actors[0].position[1] + 38;
+		vec2 adjust = {0, 0};
+		if(c2AABBtoAABB(game.actors[0].hitbox, wall)) {
+			c2Manifold col;
+			c2AABBtoAABBManifold(game.actors[0].hitbox, wall, &col);
+			printf("%f, %f\n", col.depths[0], col.depths[1]);
+			adjust[0] = col.depths[0] * c2Sign(velocity[0]);
+		}
+
+		glm_vec2_add(game.actors[0].position, velocity, game.actors[0].position);
+		game.actors[0].position[0] -= adjust[0] * 2;
+
 
 		rSwapFrameBuffer(&renderer, FB_SCENE);
-
 		rClear(&renderer);
-		rDrawSprite(&renderer, &spr_counting, b[0].position,
-					(vec2){38.0f / 64.0f, 38.0f / 64.0f});
 
-		for (i32 i = 1; i < 3; ++i) {
-			rDrawSprite(&renderer, &spr_counting, b[i].position, (vec2){1, 1});
-		}
-
-		lmGenerateLightMesh(b, 3, (vec2){50, 50}, 100, 100, &point3);
-		rDrawLightMesh(&renderer, &point3);
+		rDrawSprite(&renderer, &spr_player, game.actors->position, (vec2){1, 1});
 
 		rSwapFrameBuffer(&renderer, FB_WINDOW);
 		rClear(&renderer);
