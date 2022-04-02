@@ -15,6 +15,8 @@
 #include "renderer.h"
 #include "shader.h"
 
+#include "game/game.h"
+
 #define BUFFER_Y 240
 #define BUFFER_X 426
 
@@ -37,6 +39,8 @@ int main() {
 		printf("L\n");
 		exit(-1);
 	}
+
+	glEnable(GL_BLEND);
 
 	Renderer_t renderer;
 	renderer.framebuffers[FB_WINDOW].index = 0;
@@ -76,10 +80,7 @@ int main() {
 							 circle_indices, CIRCLE_RESOLUTION * 3);
 
 	Sprite_t spr_counting =
-		imgLoadSprite("cowboy.png", 38, 38, 0, 1.0f / 10.0f, 1);
-
-	vec2 frame_dimensions = {spr_counting.tw / spr_counting.w,
-							 spr_counting.th / spr_counting.h};
+		imgLoadSprite("64x64.png", 64, 64, 0, 1.0f / 1.0f, 0);
 
 	mat4 model;
 	glm_mat4_identity(model);
@@ -89,7 +90,7 @@ int main() {
 	b32 quit = false;
 
 	struct Block b[] = {
-		{.position = {0, 0}, .size = {32, 32}},
+		{.position = {0, 0}, .size = {38, 38}},
 		{.position = {0, 0}, .size = {32, 32}},
 		{.position = {100, 480}, .size = {100, 32}},
 	};
@@ -104,6 +105,10 @@ int main() {
 						 screen_shader);
 	struct LightMesh point3;
 
+	Game_t game = {
+		.input = {.buttons_state = 0},
+	};
+
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 		mouse_x /= renderer.framebuffers[FB_WINDOW].size[0] /
@@ -116,9 +121,52 @@ int main() {
 				quit = true;
 				break;
 			case SDL_KEYDOWN:
-				if (ev.key.keysym.sym == SDLK_F5) {
+				switch (ev.key.keysym.sym) {
+				case SDLK_F5:
 					rReloadShaders(&renderer);
+					break;
+				case SDLK_w:
+					iPressKey(&(game.input), KM_UP);
+					break;
+				case SDLK_a:
+					iPressKey(&(game.input), KM_LEFT);
+					break;
+				case SDLK_s:
+					iPressKey(&(game.input), KM_DOWN);
+					break;
+				case SDLK_d:
+					iPressKey(&(game.input), KM_RIGHT);
+					break;
+				case SDLK_j:
+					iPressKey(&(game.input), KM_ACT1);
+					break;
+				case SDLK_k:
+					iPressKey(&(game.input), KM_ACT2);
+					break;
 				}
+				break;
+			case SDL_KEYUP:
+				switch (ev.key.keysym.sym) {
+				case SDLK_w:
+					iReleaseKey(&(game.input), KM_UP);
+					break;
+				case SDLK_a:
+					iReleaseKey(&(game.input), KM_LEFT);
+					break;
+				case SDLK_s:
+					iReleaseKey(&(game.input), KM_DOWN);
+					break;
+				case SDLK_d:
+					iReleaseKey(&(game.input), KM_RIGHT);
+					break;
+				case SDLK_j:
+					iReleaseKey(&(game.input), KM_ACT1);
+					break;
+				case SDLK_k:
+					iReleaseKey(&(game.input), KM_ACT2);
+					break;
+				}
+
 			case SDL_WINDOWEVENT:
 				switch (ev.window.event) {
 				case SDL_WINDOWEVENT_RESIZED:
@@ -132,16 +180,28 @@ int main() {
 				break;
 			}
 		}
-		b[0].position[0] = mouse_x;
-		b[0].position[1] = mouse_y;
+
+		if (game.input.buttons_state & KM_RIGHT) {
+			b[0].position[0] += .1f;
+		}
+		if (game.input.buttons_state & KM_LEFT) {
+			b[0].position[0] -= .1f;
+		}
+
+		if (game.input.buttons_state & KM_DOWN) {
+			b[0].position[1] += .1f;
+		}
+		if (game.input.buttons_state & KM_UP) {
+			b[0].position[1] -= .1f;
+		}
+
 		rSwapFrameBuffer(&renderer, FB_SCENE);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		rClear(&renderer);
+		rDrawSprite(&renderer, &spr_counting, b[0].position,
+					(vec2){38.0f / 64.0f, 38.0f / 64.0f});
 
-		for (i32 i = 0; i < 3; ++i) {
-			spr_counting.current_frame = (SDL_GetTicks64() / 100) % 2;
+		for (i32 i = 1; i < 3; ++i) {
 			rDrawSprite(&renderer, &spr_counting, b[i].position, (vec2){1, 1});
 		}
 
@@ -149,7 +209,7 @@ int main() {
 		rDrawLightMesh(&renderer, &point3);
 
 		rSwapFrameBuffer(&renderer, FB_WINDOW);
-		// rClear(&renderer);
+		rClear(&renderer);
 
 		rDrawFrameBuffer(&renderer, FB_SCENE);
 
