@@ -52,8 +52,8 @@ void rReloadShaders(Renderer_t *renderer);
 void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
 					mat4 model, vec4 color);
 
-void rDrawSprite(Renderer_t* renderer, Sprite_t* sprite, vec2 position, vec2
-scale);
+void rDrawSprite(Renderer_t *renderer, Sprite_t *sprite, vec2 position,
+				 vec2 scale);
 
 void rResize(Renderer_t *renderer, int w, int h);
 void rSwapFrameBuffer(Renderer_t *renderer, u32 framebuffer_idx);

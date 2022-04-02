@@ -82,26 +82,18 @@ int main() {
 		rpNewRenderPrimitive(circle_verts, CIRCLE_RESOLUTION + 1,
 							 circle_indices, CIRCLE_RESOLUTION * 3);
 
+	f32 uncentered_rectangle_verts[] = {0.0f, 0.0f, 1.0f, 0.0f,
+										1.0f, 1.0f, 0.0f, 1.0f};
+	u32 uncentered_rectangle_indices[] = {0, 1, 3, 1, 2, 3};
 
-	f32 uncentered_rectangle_verts[] = {
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f
-	};
-	u32 uncentered_rectangle_indices[] = {
-		0, 1, 3,
-		1, 2, 3
-	};
-
-	RenderPrimitive_t uncentered_rectangle_primitive =
-		rpNewRenderPrimitive(uncentered_rectangle_verts, 4,
-							 uncentered_rectangle_indices, 6);
+	RenderPrimitive_t uncentered_rectangle_primitive = rpNewRenderPrimitive(
+		uncentered_rectangle_verts, 4, uncentered_rectangle_indices, 6);
 
 	Sprite_t spr_counting =
 		imgLoadSprite("64x64.png", 64, 64, 0, 1.0f / 1.0f, 0);
 
-	Sprite_t spr_player = imgLoadSprite("cowboy.png", 38, 38, 1, 1.0f / 10.0f, 0);
+	Sprite_t spr_player =
+		imgLoadSprite("cowboy.png", 38, 38, 1, 1.0f / 10.0f, 0);
 
 	mat4 model;
 	glm_mat4_identity(model);
@@ -132,7 +124,6 @@ int main() {
 	game.actors[0].hitbox.min.y = game.actors[0].position[1] - (38 / 2);
 	game.actors[0].hitbox.max.x = game.actors[0].position[0] + (38 / 2);
 	game.actors[0].hitbox.max.y = game.actors[0].position[1] + (38 / 2);
-
 
 	c2AABB wall;
 	wall.min.x = 100;
@@ -230,25 +221,28 @@ int main() {
 		game.actors[0].hitbox.max.x = game.actors[0].position[0] + (38 / 2);
 		game.actors[0].hitbox.max.y = game.actors[0].position[1] + (38 / 2);
 		vec2 adjust = {0, 0};
-		if(c2AABBtoAABB(game.actors[0].hitbox, wall)) {
+		if (c2AABBtoAABB(game.actors[0].hitbox, wall)) {
 			c2Manifold col;
 			c2AABBtoAABBManifold(game.actors[0].hitbox, wall, &col);
 			printf("%f, %f\n", col.depths[0], col.depths[1]);
 			adjust[0] = col.depths[0] * c2Sign(velocity[0]);
 		}
 
-		glm_vec2_add(game.actors[0].position, velocity, game.actors[0].position);
+		glm_vec2_add(game.actors[0].position, velocity,
+					 game.actors[0].position);
 		game.actors[0].position[0] -= adjust[0] * 2;
-
 
 		rSwapFrameBuffer(&renderer, FB_SCENE);
 		rClear(&renderer);
 		mat4 model;
 		glm_mat4_identity(model);
 		glm_translate(model, (vec3){wall.min.x, wall.min.y, 0});
-		glm_scale(model, (vec3){wall.max.x - wall.min.x, wall.max.y - wall.min.y, 1});
-		rDrawPrimitive(&renderer, uncentered_rectangle_primitive, model, (vec4){1.0, 0, 0, 1.0});
-		rDrawSprite(&renderer, &spr_player, game.actors->position, (vec2){1, 1});
+		glm_scale(model,
+				  (vec3){wall.max.x - wall.min.x, wall.max.y - wall.min.y, 1});
+		rDrawPrimitive(&renderer, uncentered_rectangle_primitive, model,
+					   (vec4){1.0, 0, 0, 1.0});
+		rDrawSprite(&renderer, &spr_player, game.actors->position,
+					(vec2){1, 1});
 
 		rSwapFrameBuffer(&renderer, FB_WINDOW);
 		rClear(&renderer);
