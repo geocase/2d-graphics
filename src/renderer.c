@@ -101,8 +101,8 @@ void rReloadShaders(Renderer_t *renderer) {
 
 void rResize(Renderer_t *renderer, int w, int h) {
 	glViewport(0, 0, w, h);
-	renderer->framebuffers[FB_WINDOW].size[0] = w;
-	renderer->framebuffers[FB_WINDOW].size[1] = h;
+	renderer->framebuffers[renderer->current_framebuffer].size[0] = w;
+	renderer->framebuffers[renderer->current_framebuffer].size[1] = h;
 	return;
 }
 
