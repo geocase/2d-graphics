@@ -128,17 +128,17 @@ int main() {
 	game.actors[0].type = ACT_PLAYER;
 	game.actors[0].position[0] = 0;
 	game.actors[0].position[1] = 0;
-	game.actors[0].hitbox.min.x = game.actors[0].position[0];
-	game.actors[0].hitbox.min.y = game.actors[0].position[1];
-	game.actors[0].hitbox.max.x = game.actors[0].position[0] + 38;
-	game.actors[0].hitbox.max.y = game.actors[0].position[1] + 38;
+	game.actors[0].hitbox.min.x = game.actors[0].position[0] - (38 / 2);
+	game.actors[0].hitbox.min.y = game.actors[0].position[1] - (38 / 2);
+	game.actors[0].hitbox.max.x = game.actors[0].position[0] + (38 / 2);
+	game.actors[0].hitbox.max.y = game.actors[0].position[1] + (38 / 2);
 
 
 	c2AABB wall;
 	wall.min.x = 100;
 	wall.min.y = 10;
 	wall.max.x = 120;
-	wall.max.y = 10;
+	wall.max.y = 100;
 	while (!quit) {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 		mouse_x /= renderer.framebuffers[FB_WINDOW].size[0] /
@@ -225,10 +225,10 @@ int main() {
 			velocity[1] -= .1f;
 		}
 
-		game.actors[0].hitbox.min.x = game.actors[0].position[0] + velocity[0];
-		game.actors[0].hitbox.min.y = game.actors[0].position[1] + velocity[1];
-		game.actors[0].hitbox.max.x = game.actors[0].position[0] + 38;
-		game.actors[0].hitbox.max.y = game.actors[0].position[1] + 38;
+		game.actors[0].hitbox.min.x = game.actors[0].position[0] - (38 / 2);
+		game.actors[0].hitbox.min.y = game.actors[0].position[1] - (38 / 2);
+		game.actors[0].hitbox.max.x = game.actors[0].position[0] + (38 / 2);
+		game.actors[0].hitbox.max.y = game.actors[0].position[1] + (38 / 2);
 		vec2 adjust = {0, 0};
 		if(c2AABBtoAABB(game.actors[0].hitbox, wall)) {
 			c2Manifold col;
