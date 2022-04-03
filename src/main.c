@@ -42,8 +42,9 @@ int main() {
 		printf("L\n");
 		exit(-1);
 	}
-
+	
 	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	Renderer_t renderer;
 	renderer.framebuffers[FB_WINDOW].index = 0;
@@ -108,9 +109,10 @@ int main() {
 	char *screen_shader_vs = readFilePathToCStr("shaders/buffer.vs");
 	char *screen_shader_fs = readFilePathToCStr("shaders/buffer.fs");
 	Shader_t screen_shader = shdNewShader(screen_shader_vs, screen_shader_fs);
-
+	
 	rGenerateFrameBuffer(&renderer, (vec2){BUFFER_X, BUFFER_Y}, FB_SCENE,
 						 screen_shader);
+	 
 	struct LightMesh point3;
 
 	Game_t game = {
@@ -233,6 +235,7 @@ int main() {
 		game.actors[0].position[0] -= adjust[0] * 2;
 
 		rSwapFrameBuffer(&renderer, FB_SCENE);
+		
 		rClear(&renderer);
 		mat4 model;
 		glm_mat4_identity(model);
