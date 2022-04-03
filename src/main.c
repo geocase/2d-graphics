@@ -120,6 +120,7 @@ int main() {
 	};
 
 	game.actors[0].type = ACT_PLAYER;
+	game.actors[0].position_tags = 0;
 	game.actors[0].position[0] = 0;
 	game.actors[0].position[1] = 0;
 	game.actors[0].hitbox.min.x = game.actors[0].position[0] - (38 / 2);
@@ -134,8 +135,8 @@ int main() {
 
 	c2AABB wall;
 	wall.min.x = -10000;
-	wall.min.y = BUFFER_Y - 10;
-	wall.max.x = 10000;
+	wall.min.y = BUFFER_Y - 100;
+	wall.max.x = BUFFER_X - 100;
 	wall.max.y = BUFFER_Y;
 
 	vec2 velocity = {0, 0};
@@ -214,40 +215,42 @@ int main() {
 		vec2 gravity = {0, .0001};
 		// drag
 		if (fabs(velocity[0]) > 0) {
-			velocity[0] -= .1 * c2Sign(velocity[0]);
+			velocity[0] /= 1.01;
+		}
+		f32 hori_speed = .1f;
+		if (!game.actors[0].position_tags & SF_ON_GROUND) {
+			hori_speed = .05f;
+			printf("!ground! %ld\n", SDL_GetTicks64());
 		}
 		if (game.input.buttons_state & KM_RIGHT) {
-			velocity[0] += .1f;
+
+			velocity[0] += hori_speed;
 		}
 		if (game.input.buttons_state & KM_LEFT) {
-			velocity[0] -= .1f;
+			velocity[0] -= hori_speed;
 		}
 
-		// if (game.input.buttons_state & KM_DOWN) {
-		// 	velocity[1] += .1f;
-		// }
 		if (game.input.buttons_state & KM_ACT1) {
-			game.actors[0].ground.p.x = game.actors[0].position[0];
-			game.actors[0].ground.p.y = game.actors[0].position[1];
-			c2Raycast rc;
-			i32 p = c2RaytoAABB(game.actors[0].ground, wall, &rc);
-			printf("%d\n", p);
-			if (p) {
-				c2v out = c2Impact(game.actors[0].ground, rc.t);
-				printf("%f, %f\n", out.x, out.y);
+			if (game.actors[0].position_tags & SF_ON_GROUND) {
 				velocity[1] -= 0.1f;
 			}
 		}
 		glm_vec2_add(gravity, velocity, velocity);
 
 		// set max velo
-
 		velocity[0] = min(.5, fabs(velocity[0])) * c2Sign(velocity[0]);
 		velocity[1] = min(.5, fabs(velocity[1])) * c2Sign(velocity[1]);
-		printf("velo %f, %f\n", velocity[0], velocity[1]);
+		// printf("velo %f, %f\n", velocity[0], velocity[1]);
 		// printf("pos %f, %f\n", game.actors[0].position[0],
 		// game.actors[0].position[1]);
-
+		game.actors[0].ground.p.x = game.actors[0].position[0];
+		game.actors[0].ground.p.y = game.actors[0].position[1];
+		c2Raycast rc;
+		if (c2RaytoAABB(game.actors[0].ground, wall, &rc)) {
+			aSetPositionTag(&game.actors[0], SF_ON_GROUND);
+		} else {
+			aResetPositionTag(&game.actors[0], SF_ON_GROUND);
+		}
 		game.actors[0].hitbox.min.x = game.actors[0].position[0] - (38 / 2);
 		game.actors[0].hitbox.min.y = game.actors[0].position[1] - (38 / 2);
 		game.actors[0].hitbox.max.x = game.actors[0].position[0] + (38 / 2);
@@ -264,8 +267,10 @@ int main() {
 
 		glm_vec2_add(game.actors[0].position, velocity,
 					 game.actors[0].position);
-		game.actors[0].position[0] -= adjust[0];
-		game.actors[0].position[1] -= adjust[1];
+		glm_vec2_sub(game.actors[0].position, adjust, game.actors[0].position);
+		if (game.actors[0].position_tags & SF_ON_GROUND) {
+			velocity[1] = 0;
+		}
 
 		rSwapFrameBuffer(&renderer, FB_SCENE);
 

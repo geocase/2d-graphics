@@ -1,6 +1,6 @@
 #ifndef ACTOR_H
 #define ACTOR_H
-#include <cglm/cglm.h>
+#include "common.h"
 #include "cute_c2.h"
 
 typedef enum {ACT_PLAYER, ACT_MAX} ActorType_e;
