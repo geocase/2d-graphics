@@ -133,11 +133,14 @@ int main() {
 	game.actors[0].ground.d.y = 1.0f;
 	game.actors[0].ground.t = (38 / 2) + 1;
 
-	c2AABB wall;
-	wall.min.x = -10000;
-	wall.min.y = BUFFER_Y - 100;
-	wall.max.x = BUFFER_X - 100;
-	wall.max.y = BUFFER_Y;
+	c2AABB wall[] = {{.min.x = -10000,
+					  .min.y = BUFFER_Y - 100,
+					  .max.x = BUFFER_X,
+					  .max.y = BUFFER_Y},
+					 {.min.x = BUFFER_X,
+					  .min.y = BUFFER_Y - 50,
+					  .max.x = 1000,
+					  .max.y = BUFFER_Y}};
 
 	vec2 velocity = {0, 0};
 
@@ -261,31 +264,36 @@ int main() {
 					velocity[0] = 0;
 				}
 			}
-			// printf("velo %f, %f\n", velocity[0], velocity[1]);
-			// printf("pos %f, %f\n", game.actors[0].position[0],
-			// game.actors[0].position[1]);
 			game.actors[0].ground.p.x = game.actors[0].position[0];
 			game.actors[0].ground.p.y = game.actors[0].position[1];
-			c2Raycast rc;
-			if (c2RaytoAABB(game.actors[0].ground, wall, &rc)) {
-				aSetPositionTag(&game.actors[0], SF_ON_GROUND);
-			} else {
-				aResetPositionTag(&game.actors[0], SF_ON_GROUND);
-			}
+
 			game.actors[0].hitbox.min.x =
 				game.actors[0].position[0] - (38 / 2) + velocity[0];
 			game.actors[0].hitbox.min.y =
 				game.actors[0].position[1] - (38 / 2) + velocity[1];
 			game.actors[0].hitbox.max.x = game.actors[0].hitbox.min.x + 38;
 			game.actors[0].hitbox.max.y = game.actors[0].hitbox.min.y + 38;
+
 			vec2 adjust = {0, 0};
-			if (c2AABBtoAABB(game.actors[0].hitbox, wall)) {
-				c2Manifold col;
-				c2AABBtoAABBManifold(game.actors[0].hitbox, wall, &col);
-				// printf("%f, %f\n", col.depths[0], col.depths[1]);
-				// printf("n %f, %f\n", col.n.x, col.n.y);
-				adjust[0] = col.depths[0] * col.n.x;
-				adjust[1] = col.depths[0] * col.n.y;
+			b32 already_on_ground = false;
+			for (int i = 0; i < 2; ++i) {
+				c2Raycast rc;
+				if (!already_on_ground) {
+					if (c2RaytoAABB(game.actors[0].ground, wall[i], &rc)) {
+						aSetPositionTag(&game.actors[0], SF_ON_GROUND);
+						already_on_ground = true;
+					} else {
+						aResetPositionTag(&game.actors[0], SF_ON_GROUND);
+					}
+				}
+
+				if (c2AABBtoAABB(game.actors[0].hitbox, wall[i])) {
+					c2Manifold col;
+					c2AABBtoAABBManifold(game.actors[0].hitbox, wall[i], &col);
+					// printf("%f, %f\n", col.depths[0], col.depths[1]);
+					adjust[0] += col.depths[0] * col.n.x;
+					adjust[1] += col.depths[0] * col.n.y;
+				}
 			}
 
 			glm_vec2_add(game.actors[0].position, velocity,
@@ -299,7 +307,7 @@ int main() {
 			accumulator -= dt;
 		}
 		glm_mat4_identity(renderer.view);
-		f32 sc = 1.0f;
+		f32 sc = .5f;
 		vec2 vscale = {sc, sc};
 		glm_scale(renderer.view, (vec3){vscale[0], vscale[1], 1.0});
 
@@ -315,11 +323,19 @@ int main() {
 		rClear(&renderer);
 		mat4 model;
 		glm_mat4_identity(model);
-		glm_translate(model, (vec3){wall.min.x, wall.min.y, 0});
-		glm_scale(model,
-				  (vec3){wall.max.x - wall.min.x, wall.max.y - wall.min.y, 1});
+		glm_translate(model, (vec3){wall[0].min.x, wall[0].min.y, 0});
+		glm_scale(model, (vec3){wall[0].max.x - wall[0].min.x,
+								wall[0].max.y - wall[0].min.y, 1});
 		rDrawPrimitive(&renderer, uncentered_rectangle_primitive, model,
 					   (vec4){1.0, 0, 0, 1.0});
+
+		glm_mat4_identity(model);
+		glm_translate(model, (vec3){wall[1].min.x, wall[1].min.y, 0});
+		glm_scale(model, (vec3){wall[1].max.x - wall[1].min.x,
+								wall[1].max.y - wall[1].min.y, 1});
+		rDrawPrimitive(&renderer, uncentered_rectangle_primitive, model,
+					   (vec4){1.0, 1.0, 0, 1.0});
+
 		rDrawSprite(&renderer, &spr_player, game.actors->position,
 					(vec2){1, 1});
 
