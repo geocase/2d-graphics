@@ -226,7 +226,7 @@ int main() {
 					break;
 				}
 			}
-			vec2 gravity = {0, 2.0f};
+			vec2 gravity = {0, 1.0f};
 
 			f32 hori_speed = 3.0f;
 			if (!game.actors[0].position_tags & SF_ON_GROUND) {
@@ -241,7 +241,7 @@ int main() {
 
 			if (game.input.buttons_state & KM_ACT1) {
 				if (game.actors[0].position_tags & SF_ON_GROUND) {
-					velocity[1] -= 20.0f;
+					velocity[1] -= 10.0f;
 				}
 			}
 			glm_vec2_add(gravity, velocity, velocity);
@@ -252,9 +252,9 @@ int main() {
 
 			// drag
 			if (fabs(velocity[0]) > 0) {
-				f32 drag = 1.0f;
+				f32 drag = 2.0f;
 				if (game.actors[0].position_tags & SF_ON_GROUND) {
-					drag = 0.5f;
+					drag = 1.0f;
 				}
 				velocity[0] -= drag * c2Sign(velocity[0]);
 				if (fabs(velocity[0]) < .0003) {
@@ -298,6 +298,17 @@ int main() {
 
 			accumulator -= dt;
 		}
+		glm_mat4_identity(renderer.view);
+		f32 sc = 1.0f;
+		vec2 vscale = {sc, sc};
+		glm_scale(renderer.view, (vec3){vscale[0], vscale[1], 1.0});
+
+		glm_translate(renderer.view,
+					  (vec3){-game.actors[0].position[0] +
+								 (BUFFER_X / (2 / (1 / vscale[0]))),
+							 -game.actors[0].position[1] +
+								 (BUFFER_Y / (2 / (1 / vscale[1]))),
+							 0});
 
 		rSwapFrameBuffer(&renderer, FB_SCENE);
 
