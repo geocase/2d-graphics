@@ -131,7 +131,7 @@ int main() {
 	game.actors[0].ground.p.y = game.actors[0].position[1];
 	game.actors[0].ground.d.x = 0;
 	game.actors[0].ground.d.y = 1.0f;
-	game.actors[0].ground.t = (38 / 2);
+	game.actors[0].ground.t = (38 / 2) + 1;
 
 	c2AABB wall;
 	wall.min.x = -10000;
@@ -141,135 +141,162 @@ int main() {
 
 	vec2 velocity = {0, 0};
 
+	// timing
+	const double dt = 1.0 / 60.0;
+
+	f64 current_time = SDL_GetTicks64() / 1000.0f;
+	f64 accumulator = 0.0;
+
 	while (!quit) {
-		SDL_GetMouseState(&mouse_x, &mouse_y);
-		mouse_x /= renderer.framebuffers[FB_WINDOW].size[0] /
-				   renderer.framebuffers[FB_SCENE].size[0];
-		mouse_y /= renderer.framebuffers[FB_WINDOW].size[1] /
-				   renderer.framebuffers[FB_SCENE].size[1];
-		while (SDL_PollEvent(&ev) != 0) {
-			switch (ev.type) {
-			case SDL_QUIT:
-				quit = true;
-				break;
-			case SDL_KEYDOWN:
-				switch (ev.key.keysym.sym) {
-				case SDLK_F5:
-					rReloadShaders(&renderer);
-					break;
-				case SDLK_w:
-					iPressKey(&(game.input), KM_UP);
-					break;
-				case SDLK_a:
-					iPressKey(&(game.input), KM_LEFT);
-					break;
-				case SDLK_s:
-					iPressKey(&(game.input), KM_DOWN);
-					break;
-				case SDLK_d:
-					iPressKey(&(game.input), KM_RIGHT);
-					break;
-				case SDLK_j:
-					iPressKey(&(game.input), KM_ACT1);
-					break;
-				case SDLK_k:
-					iPressKey(&(game.input), KM_ACT2);
-					break;
-				}
-				break;
-			case SDL_KEYUP:
-				switch (ev.key.keysym.sym) {
-				case SDLK_w:
-					iReleaseKey(&(game.input), KM_UP);
-					break;
-				case SDLK_a:
-					iReleaseKey(&(game.input), KM_LEFT);
-					break;
-				case SDLK_s:
-					iReleaseKey(&(game.input), KM_DOWN);
-					break;
-				case SDLK_d:
-					iReleaseKey(&(game.input), KM_RIGHT);
-					break;
-				case SDLK_j:
-					iReleaseKey(&(game.input), KM_ACT1);
-					break;
-				case SDLK_k:
-					iReleaseKey(&(game.input), KM_ACT2);
-					break;
-				}
+		i32 start = SDL_GetPerformanceCounter();
+		f64 new_time = SDL_GetTicks64() / 1000.0f;
+		f64 frame_time = new_time - current_time;
+		current_time = new_time;
+		accumulator += frame_time;
 
-			case SDL_WINDOWEVENT:
-				switch (ev.window.event) {
-				case SDL_WINDOWEVENT_RESIZED:
-					rSwapFrameBuffer(&renderer, FB_WINDOW);
-					u32 x, y;
-					x = ev.window.data1;
-					y = ev.window.data2;
-					rResize(&renderer, x, y);
+		while (accumulator >= dt) {
+
+			SDL_GetMouseState(&mouse_x, &mouse_y);
+			mouse_x /= renderer.framebuffers[FB_WINDOW].size[0] /
+					   renderer.framebuffers[FB_SCENE].size[0];
+			mouse_y /= renderer.framebuffers[FB_WINDOW].size[1] /
+					   renderer.framebuffers[FB_SCENE].size[1];
+			while (SDL_PollEvent(&ev) != 0) {
+				switch (ev.type) {
+				case SDL_QUIT:
+					quit = true;
+					break;
+				case SDL_KEYDOWN:
+					switch (ev.key.keysym.sym) {
+					case SDLK_F5:
+						rReloadShaders(&renderer);
+						break;
+					case SDLK_w:
+						iPressKey(&(game.input), KM_UP);
+						break;
+					case SDLK_a:
+						iPressKey(&(game.input), KM_LEFT);
+						break;
+					case SDLK_s:
+						iPressKey(&(game.input), KM_DOWN);
+						break;
+					case SDLK_d:
+						iPressKey(&(game.input), KM_RIGHT);
+						break;
+					case SDLK_j:
+						iPressKey(&(game.input), KM_ACT1);
+						break;
+					case SDLK_k:
+						iPressKey(&(game.input), KM_ACT2);
+						break;
+					}
+					break;
+				case SDL_KEYUP:
+					switch (ev.key.keysym.sym) {
+					case SDLK_w:
+						iReleaseKey(&(game.input), KM_UP);
+						break;
+					case SDLK_a:
+						iReleaseKey(&(game.input), KM_LEFT);
+						break;
+					case SDLK_s:
+						iReleaseKey(&(game.input), KM_DOWN);
+						break;
+					case SDLK_d:
+						iReleaseKey(&(game.input), KM_RIGHT);
+						break;
+					case SDLK_j:
+						iReleaseKey(&(game.input), KM_ACT1);
+						break;
+					case SDLK_k:
+						iReleaseKey(&(game.input), KM_ACT2);
+						break;
+					}
+
+				case SDL_WINDOWEVENT:
+					switch (ev.window.event) {
+					case SDL_WINDOWEVENT_RESIZED:
+						rSwapFrameBuffer(&renderer, FB_WINDOW);
+						u32 x, y;
+						x = ev.window.data1;
+						y = ev.window.data2;
+						rResize(&renderer, x, y);
+						break;
+					}
 					break;
 				}
-				break;
 			}
-		}
-		vec2 gravity = {0, .0001};
-		// drag
-		if (fabs(velocity[0]) > 0) {
-			velocity[0] /= 1.01;
-		}
-		f32 hori_speed = .1f;
-		if (!game.actors[0].position_tags & SF_ON_GROUND) {
-			hori_speed = .05f;
-			printf("!ground! %ld\n", SDL_GetTicks64());
-		}
-		if (game.input.buttons_state & KM_RIGHT) {
+			vec2 gravity = {0, 2.0f};
 
-			velocity[0] += hori_speed;
-		}
-		if (game.input.buttons_state & KM_LEFT) {
-			velocity[0] -= hori_speed;
-		}
+			f32 hori_speed = 3.0f;
+			if (!game.actors[0].position_tags & SF_ON_GROUND) {
+				hori_speed = 2.0f;
+			}
+			if (game.input.buttons_state & KM_RIGHT) {
+				velocity[0] += hori_speed;
+			}
+			if (game.input.buttons_state & KM_LEFT) {
+				velocity[0] -= hori_speed;
+			}
 
-		if (game.input.buttons_state & KM_ACT1) {
+			if (game.input.buttons_state & KM_ACT1) {
+				if (game.actors[0].position_tags & SF_ON_GROUND) {
+					velocity[1] -= 20.0f;
+				}
+			}
+			glm_vec2_add(gravity, velocity, velocity);
+
+			// set max velo
+			velocity[0] = min(20, fabs(velocity[0])) * c2Sign(velocity[0]);
+			velocity[1] = min(50, fabs(velocity[1])) * c2Sign(velocity[1]);
+
+			// drag
+			if (fabs(velocity[0]) > 0) {
+				f32 drag = 1.0f;
+				if (game.actors[0].position_tags & SF_ON_GROUND) {
+					drag = 0.5f;
+				}
+				velocity[0] -= drag * c2Sign(velocity[0]);
+				if (fabs(velocity[0]) < .0003) {
+					velocity[0] = 0;
+				}
+			}
+			// printf("velo %f, %f\n", velocity[0], velocity[1]);
+			// printf("pos %f, %f\n", game.actors[0].position[0],
+			// game.actors[0].position[1]);
+			game.actors[0].ground.p.x = game.actors[0].position[0];
+			game.actors[0].ground.p.y = game.actors[0].position[1];
+			c2Raycast rc;
+			if (c2RaytoAABB(game.actors[0].ground, wall, &rc)) {
+				aSetPositionTag(&game.actors[0], SF_ON_GROUND);
+			} else {
+				aResetPositionTag(&game.actors[0], SF_ON_GROUND);
+			}
+			game.actors[0].hitbox.min.x =
+				game.actors[0].position[0] - (38 / 2) + velocity[0];
+			game.actors[0].hitbox.min.y =
+				game.actors[0].position[1] - (38 / 2) + velocity[1];
+			game.actors[0].hitbox.max.x = game.actors[0].hitbox.min.x + 38;
+			game.actors[0].hitbox.max.y = game.actors[0].hitbox.min.y + 38;
+			vec2 adjust = {0, 0};
+			if (c2AABBtoAABB(game.actors[0].hitbox, wall)) {
+				c2Manifold col;
+				c2AABBtoAABBManifold(game.actors[0].hitbox, wall, &col);
+				// printf("%f, %f\n", col.depths[0], col.depths[1]);
+				// printf("n %f, %f\n", col.n.x, col.n.y);
+				adjust[0] = col.depths[0] * col.n.x;
+				adjust[1] = col.depths[0] * col.n.y;
+			}
+
+			glm_vec2_add(game.actors[0].position, velocity,
+						 game.actors[0].position);
+			glm_vec2_sub(game.actors[0].position, adjust,
+						 game.actors[0].position);
 			if (game.actors[0].position_tags & SF_ON_GROUND) {
-				velocity[1] -= 0.1f;
+				velocity[1] = 0;
 			}
-		}
-		glm_vec2_add(gravity, velocity, velocity);
 
-		// set max velo
-		velocity[0] = min(.5, fabs(velocity[0])) * c2Sign(velocity[0]);
-		velocity[1] = min(.5, fabs(velocity[1])) * c2Sign(velocity[1]);
-		// printf("velo %f, %f\n", velocity[0], velocity[1]);
-		// printf("pos %f, %f\n", game.actors[0].position[0],
-		// game.actors[0].position[1]);
-		game.actors[0].ground.p.x = game.actors[0].position[0];
-		game.actors[0].ground.p.y = game.actors[0].position[1];
-		c2Raycast rc;
-		if (c2RaytoAABB(game.actors[0].ground, wall, &rc)) {
-			aSetPositionTag(&game.actors[0], SF_ON_GROUND);
-		} else {
-			aResetPositionTag(&game.actors[0], SF_ON_GROUND);
-		}
-		game.actors[0].hitbox.min.x = game.actors[0].position[0] - (38 / 2);
-		game.actors[0].hitbox.min.y = game.actors[0].position[1] - (38 / 2);
-		game.actors[0].hitbox.max.x = game.actors[0].position[0] + (38 / 2);
-		game.actors[0].hitbox.max.y = game.actors[0].position[1] + (38 / 2);
-		vec2 adjust = {0, 0};
-		if (c2AABBtoAABB(game.actors[0].hitbox, wall)) {
-			c2Manifold col;
-			c2AABBtoAABBManifold(game.actors[0].hitbox, wall, &col);
-			// printf("%f, %f\n", col.depths[0], col.depths[1]);
-			// printf("n %f, %f\n", col.n.x, col.n.y);
-			adjust[0] = col.depths[0] * col.n.x;
-			adjust[1] = col.depths[0] * col.n.y;
-		}
-
-		glm_vec2_add(game.actors[0].position, velocity,
-					 game.actors[0].position);
-		glm_vec2_sub(game.actors[0].position, adjust, game.actors[0].position);
-		if (game.actors[0].position_tags & SF_ON_GROUND) {
-			velocity[1] = 0;
+			accumulator -= dt;
 		}
 
 		rSwapFrameBuffer(&renderer, FB_SCENE);
