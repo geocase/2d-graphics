@@ -40,7 +40,7 @@ void generateLightMeshGLObjects(struct LightMesh *lm, f32 *verts,
 void lmGenerateLightMesh(c2AABB *shadow_casters, u32 shadow_caster_count,
 						 vec2 position, f32 radius, u32 resolution,
 						 struct LightMesh *lm) {
-	const f32 cast_step = 1.0f;
+	const f32 cast_step = 5.0f;
 	vec2 *circle_verts = malloc(sizeof(vec2) * (resolution + 1));
 	u32 *circle_indices = malloc(sizeof(u32) * (resolution * 3));
 	vec2 center = {position[0], position[1]};
@@ -63,8 +63,8 @@ void lmGenerateLightMesh(c2AABB *shadow_casters, u32 shadow_caster_count,
 				}
 			}
 			if (broke) {
-				circle_verts[i][0] += cosf(angle) * cast_step * 10;
-				circle_verts[i][1] += sinf(angle) * cast_step * 10;
+				circle_verts[i][0] += cosf(angle) * (cast_step * 2);
+				circle_verts[i][1] += sinf(angle) * (cast_step * 2);
 				break;
 			}
 			circle_verts[i][0] += cosf(angle) * cast_step;
