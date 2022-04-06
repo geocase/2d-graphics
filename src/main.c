@@ -109,9 +109,20 @@ int main() {
 	char *screen_shader_vs = readFilePathToCStr("shaders/buffer.vs");
 	char *screen_shader_fs = readFilePathToCStr("shaders/buffer.fs");
 	Shader_t screen_shader = shdNewShader(screen_shader_vs, screen_shader_fs);
+	free(screen_shader_vs);
+	free(screen_shader_fs);
 
 	rGenerateFrameBuffer(&renderer, (vec2){BUFFER_X, BUFFER_Y}, FB_SCENE,
 						 screen_shader);
+
+	screen_shader_vs = readFilePathToCStr("shaders/lighting_buffer.vs");
+	screen_shader_fs = readFilePathToCStr("shaders/lighting_buffer.fs");
+	screen_shader = shdNewShader(screen_shader_vs, screen_shader_fs);
+	rGenerateFrameBuffer(&renderer, (vec2){BUFFER_X, BUFFER_Y}, FB_LIGHTING,
+						 screen_shader);
+
+	free(screen_shader_vs);
+	free(screen_shader_fs);
 
 	struct LightMesh point3;
 
@@ -156,7 +167,6 @@ int main() {
 	f64 accumulator = 0.0;
 
 	struct LightMesh l;
-	lmGenerateLightMesh(NULL, 0, (vec2){BUFFER_X, 50}, 200, 100, &l);
 
 	while (!quit) {
 		i32 start = SDL_GetPerformanceCounter();
@@ -329,8 +339,6 @@ int main() {
 
 		rClear(&renderer);
 
-		rDrawLightMesh(&renderer, &l);
-
 		for (int i = 0; i < wall_count; ++i) {
 			mat4 model;
 			glm_mat4_identity(model);
@@ -344,10 +352,17 @@ int main() {
 		rDrawSprite(&renderer, &spr_player, game.actors->position,
 					(vec2){1, 1});
 
+		rSwapFrameBuffer(&renderer, FB_LIGHTING);
+		rClear(&renderer);
+		lmGenerateLightMesh(wall, wall_count, game.actors[0].position, 400, 360,
+							&l);
+		rDrawLightMesh(&renderer, &l);
+
 		rSwapFrameBuffer(&renderer, FB_WINDOW);
 		rClear(&renderer);
 
 		rDrawFrameBuffer(&renderer, FB_SCENE);
+		rDrawFrameBuffer(&renderer, FB_LIGHTING);
 
 		SDL_GL_SwapWindow(win);
 	}

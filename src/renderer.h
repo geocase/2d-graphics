@@ -14,7 +14,7 @@ RenderPrimitive_t rpNewRenderPrimitive(f32 *verts, u32 vert_count, u32 *indices,
 									   u32 tri_count);
 
 enum { SHADER_SPRITE, SHADER_PRIMITIVE, SHADER_MAX };
-enum { FB_WINDOW, FB_SCENE, FB_MAX };
+enum { FB_WINDOW, FB_SCENE, FB_LIGHTING, FB_MAX };
 
 struct SpriteGLIndices {
 	u32 vao, vbo, ebo;

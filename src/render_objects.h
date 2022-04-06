@@ -2,6 +2,7 @@
 #define RENDER_OBJECTS_H
 #include "common.h"
 #include "renderer.h"
+#include <cute_c2.h>
 
 struct LightMesh {
 	u32 vao, vbo, ebo;
@@ -9,7 +10,7 @@ struct LightMesh {
 	u32 tri_count;
 };
 
-void lmGenerateLightMesh(struct Block *shadow_casters, u32 shadow_caster_count,
+void lmGenerateLightMesh(c2AABB *shadow_casters, u32 shadow_caster_count,
 						 vec2 position, f32 radius, u32 resolution,
 						 struct LightMesh *lm);
 void rDrawLightMesh(Renderer_t *renderer, struct LightMesh *lm);

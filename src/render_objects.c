@@ -1,5 +1,7 @@
 #include <glad/glad.h>
 
+#include "cute_c2.h"
+
 #include "common.h"
 #include "render_objects.h"
 
@@ -35,10 +37,10 @@ void generateLightMeshGLObjects(struct LightMesh *lm, f32 *verts,
 	return;
 }
 
-void lmGenerateLightMesh(struct Block *shadow_casters, u32 shadow_caster_count,
+void lmGenerateLightMesh(c2AABB *shadow_casters, u32 shadow_caster_count,
 						 vec2 position, f32 radius, u32 resolution,
 						 struct LightMesh *lm) {
-	const f32 cast_step = 5.0f;
+	const f32 cast_step = 1.0f;
 	vec2 *circle_verts = malloc(sizeof(vec2) * (resolution + 1));
 	u32 *circle_indices = malloc(sizeof(u32) * (resolution * 3));
 	vec2 center = {position[0], position[1]};
@@ -51,12 +53,18 @@ void lmGenerateLightMesh(struct Block *shadow_casters, u32 shadow_caster_count,
 		while (true) {
 			b32 broke = false;
 			for (i32 p = 0; p < shadow_caster_count; ++p) {
-				if (pointInQuad(circle_verts[i], &shadow_casters[p])) {
+				c2Circle t = {.p = (c2v){.x = circle_verts[i][0],
+										 .y = circle_verts[i][1]},
+							  .r = .01};
+				// printf("t.p %f, %f\n", t.p.x, t.p.y);
+				if (c2CircletoAABB(t, shadow_casters[p])) {
 					broke = true;
 					break;
 				}
 			}
 			if (broke) {
+				circle_verts[i][0] += cosf(angle) * cast_step * 10;
+				circle_verts[i][1] += sinf(angle) * cast_step * 10;
 				break;
 			}
 			circle_verts[i][0] += cosf(angle) * cast_step;
@@ -83,7 +91,7 @@ void lmGenerateLightMesh(struct Block *shadow_casters, u32 shadow_caster_count,
 }
 
 void rDrawLightMesh(Renderer_t *renderer, struct LightMesh *lm) {
-	vec4 color = {1.0f, 1.0f, 0.0f, 0.5f};
+	vec4 color = {0, 0, 0.0f, 1.0f};
 	mat4 model;
 	glm_mat4_identity(model);
 	shdUseShader(&renderer->shaders[SHADER_PRIMITIVE]);
