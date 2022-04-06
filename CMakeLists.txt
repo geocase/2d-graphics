@@ -15,7 +15,7 @@ include_directories(lib/cute)
 
 include_directories(src)
 
-set(SOURCES src/common.c src/main.c src/image.c src/shader.c src/fio.c src/renderer.c src/render_objects.c  src/game/input_state.c src/game/actor.c src/game/actor_player.c)
+set(SOURCES src/common.c src/main.c src/image.c src/shader.c src/fio.c src/renderer.c src/render_objects.c  src/game/input_state.c src/game/actor.c src/game/actor_player.c src/game/actor_physics.c)
 
 include_directories(lib/glad/include/)
 set(GLAD_SOURCES lib/glad/src/glad.c)

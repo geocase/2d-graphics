@@ -13,6 +13,7 @@
 
 #include "common.h"
 #include "fio.h"
+#include "game/actor_physics.h"
 #include "game/actor_player.h"
 #include "image.h"
 #include "render_objects.h"
@@ -234,6 +235,14 @@ int main() {
 			}
 
 			aUpdatePlayer(&game, &(game.actors[0]));
+
+			aFall(&(game.actors[1]));
+			aJump(&(game.actors[1]), 20.0f);
+			// aFollow(&(game.actors[1]), &(game.actors[0]), 500);
+			aDrag(&(game.actors[1]));
+			aUpdateHitbox(&(game.actors[1]));
+			aAdjustCollisions(&game, &(game.actors[1]));
+			aCommitMovement(&(game.actors[1]));
 
 			accumulator -= dt;
 		}
