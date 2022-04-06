@@ -140,7 +140,12 @@ int main() {
 					 {.min.x = BUFFER_X,
 					  .min.y = BUFFER_Y - 50,
 					  .max.x = 1000,
-					  .max.y = BUFFER_Y}};
+					  .max.y = BUFFER_Y},
+					 {.min.x = BUFFER_X + 40,
+					  .min.y = BUFFER_Y - 200,
+					  .max.x = BUFFER_X + 40 + 100,
+					  .max.y = BUFFER_Y - 100}};
+	i32 wall_count = sizeof(wall) / sizeof(c2AABB);
 
 	vec2 velocity = {0, 0};
 
@@ -149,6 +154,9 @@ int main() {
 
 	f64 current_time = SDL_GetTicks64() / 1000.0f;
 	f64 accumulator = 0.0;
+
+	struct LightMesh l;
+	lmGenerateLightMesh(NULL, 0, (vec2){BUFFER_X, 50}, 200, 100, &l);
 
 	while (!quit) {
 		i32 start = SDL_GetPerformanceCounter();
@@ -233,7 +241,7 @@ int main() {
 
 			f32 hori_speed = 3.0f;
 			if (!game.actors[0].position_tags & SF_ON_GROUND) {
-				hori_speed = 2.0f;
+				hori_speed = 2.5f;
 			}
 			if (game.input.buttons_state & KM_RIGHT) {
 				velocity[0] += hori_speed;
@@ -276,7 +284,7 @@ int main() {
 
 			vec2 adjust = {0, 0};
 			b32 already_on_ground = false;
-			for (int i = 0; i < 2; ++i) {
+			for (int i = 0; i < wall_count; ++i) {
 				c2Raycast rc;
 				if (!already_on_ground) {
 					if (c2RaytoAABB(game.actors[0].ground, wall[i], &rc)) {
@@ -295,11 +303,10 @@ int main() {
 					adjust[1] += col.depths[0] * col.n.y;
 				}
 			}
-
+			glm_vec2_sub(velocity, adjust, velocity);
 			glm_vec2_add(game.actors[0].position, velocity,
 						 game.actors[0].position);
-			glm_vec2_sub(game.actors[0].position, adjust,
-						 game.actors[0].position);
+
 			if (game.actors[0].position_tags & SF_ON_GROUND) {
 				velocity[1] = 0;
 			}
@@ -321,20 +328,18 @@ int main() {
 		rSwapFrameBuffer(&renderer, FB_SCENE);
 
 		rClear(&renderer);
-		mat4 model;
-		glm_mat4_identity(model);
-		glm_translate(model, (vec3){wall[0].min.x, wall[0].min.y, 0});
-		glm_scale(model, (vec3){wall[0].max.x - wall[0].min.x,
-								wall[0].max.y - wall[0].min.y, 1});
-		rDrawPrimitive(&renderer, uncentered_rectangle_primitive, model,
-					   (vec4){1.0, 0, 0, 1.0});
 
-		glm_mat4_identity(model);
-		glm_translate(model, (vec3){wall[1].min.x, wall[1].min.y, 0});
-		glm_scale(model, (vec3){wall[1].max.x - wall[1].min.x,
-								wall[1].max.y - wall[1].min.y, 1});
-		rDrawPrimitive(&renderer, uncentered_rectangle_primitive, model,
-					   (vec4){1.0, 1.0, 0, 1.0});
+		rDrawLightMesh(&renderer, &l);
+
+		for (int i = 0; i < wall_count; ++i) {
+			mat4 model;
+			glm_mat4_identity(model);
+			glm_translate(model, (vec3){wall[i].min.x, wall[i].min.y, 0});
+			glm_scale(model, (vec3){wall[i].max.x - wall[i].min.x,
+									wall[i].max.y - wall[i].min.y, 1});
+			rDrawPrimitive(&renderer, uncentered_rectangle_primitive, model,
+						   (vec4){1.0, 0, 0, 1.0});
+		}
 
 		rDrawSprite(&renderer, &spr_player, game.actors->position,
 					(vec2){1, 1});
