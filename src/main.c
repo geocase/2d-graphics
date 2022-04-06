@@ -239,6 +239,7 @@ int main() {
 			aFall(&(game.actors[1]));
 			aFollow(&(game.actors[1]), &(game.actors[0]), 400);
 			aDrag(&(game.actors[1]));
+			aCapSpeed(&(game.actors[1]));
 			aUpdateHitbox(&(game.actors[1]));
 			aAdjustCollisions(&game, &(game.actors[1]));
 			aCommitMovement(&(game.actors[1]));

@@ -107,3 +107,10 @@ void aFollow(Actor_t *const follower, const Actor_t *const followee,
 	}
 	return;
 }
+
+void aCapSpeed(Actor_t *const actor) {
+	actor->velocity[0] =
+		min(20, fabs(actor->velocity[0])) * c2Sign(actor->velocity[0]);
+	actor->velocity[1] =
+		min(50, fabs(actor->velocity[1])) * c2Sign(actor->velocity[1]);
+}
