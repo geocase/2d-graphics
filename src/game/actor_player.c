@@ -45,18 +45,11 @@ void aUpdatePlayer(Game_t *game, Actor_t *actor) {
 	if (game->input.buttons_state & KM_ACT1) {
 		aPlayerJump(actor);
 	}
+
 	aFall(actor);
-	// set max velo
-	actor->velocity[0] =
-		min(20, fabs(actor->velocity[0])) * c2Sign(actor->velocity[0]);
-	actor->velocity[1] =
-		min(50, fabs(actor->velocity[1])) * c2Sign(actor->velocity[1]);
-
-	// drag
+	aCapSpeed(actor);
 	aDrag(actor);
-
 	aUpdateHitbox(actor);
-
 	aAdjustCollisions(game, actor);
 	aCommitMovement(actor);
 }
