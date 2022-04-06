@@ -39,7 +39,7 @@ int main() {
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 	SDL_GLContext *context = SDL_GL_CreateContext(win);
 	SDL_GL_MakeCurrent(win, context);
-
+	SDL_GL_SetSwapInterval(1);
 	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
 		printf("L\n");
 		exit(-1);
