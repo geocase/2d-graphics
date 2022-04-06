@@ -13,6 +13,7 @@
 
 #include "common.h"
 #include "fio.h"
+#include "game/actor_player.h"
 #include "image.h"
 #include "render_objects.h"
 #include "renderer.h"
@@ -126,39 +127,23 @@ int main() {
 
 	struct LightMesh point3;
 
-	Game_t game = {
-		.input = {.buttons_state = 0},
-	};
+	Game_t game = {.input = {.buttons_state = 0},
+				   .static_geometry = {{.min.x = -10000,
+										.min.y = BUFFER_Y - 100,
+										.max.x = BUFFER_X,
+										.max.y = BUFFER_Y},
+									   {.min.x = BUFFER_X,
+										.min.y = BUFFER_Y - 50,
+										.max.x = 1000,
+										.max.y = BUFFER_Y},
+									   {.min.x = BUFFER_X + 40,
+										.min.y = BUFFER_Y - 200,
+										.max.x = BUFFER_X + 40 + 100,
+										.max.y = BUFFER_Y - 100}}};
+	aInitPlayer(&game, &(game.actors[0]));
+	aInitPlayer(&game, &(game.actors[1]));
 
-	game.actors[0].type = ACT_PLAYER;
-	game.actors[0].position_tags = 0;
-	game.actors[0].position[0] = 0;
-	game.actors[0].position[1] = 0;
-	game.actors[0].hitbox.min.x = game.actors[0].position[0] - (38 / 2);
-	game.actors[0].hitbox.min.y = game.actors[0].position[1] - (38 / 2);
-	game.actors[0].hitbox.max.x = game.actors[0].position[0] + (38 / 2);
-	game.actors[0].hitbox.max.y = game.actors[0].position[1] + (38 / 2);
-	game.actors[0].ground.p.x = game.actors[0].position[0];
-	game.actors[0].ground.p.y = game.actors[0].position[1];
-	game.actors[0].ground.d.x = 0;
-	game.actors[0].ground.d.y = 1.0f;
-	game.actors[0].ground.t = (38 / 2) + 1;
-
-	c2AABB wall[] = {{.min.x = -10000,
-					  .min.y = BUFFER_Y - 100,
-					  .max.x = BUFFER_X,
-					  .max.y = BUFFER_Y},
-					 {.min.x = BUFFER_X,
-					  .min.y = BUFFER_Y - 50,
-					  .max.x = 1000,
-					  .max.y = BUFFER_Y},
-					 {.min.x = BUFFER_X + 40,
-					  .min.y = BUFFER_Y - 200,
-					  .max.x = BUFFER_X + 40 + 100,
-					  .max.y = BUFFER_Y - 100}};
-	i32 wall_count = sizeof(wall) / sizeof(c2AABB);
-
-	vec2 velocity = {0, 0};
+	i32 wall_count = sizeof(game.static_geometry) / sizeof(c2AABB);
 
 	// timing
 	const double dt = 1.0 / 60.0;
@@ -247,84 +232,13 @@ int main() {
 					break;
 				}
 			}
-			vec2 gravity = {0, 1.0f};
 
-			f32 hori_speed = 3.0f;
-			if (!game.actors[0].position_tags & SF_ON_GROUND) {
-				hori_speed = 2.5f;
-			}
-			if (game.input.buttons_state & KM_RIGHT) {
-				velocity[0] += hori_speed;
-			}
-			if (game.input.buttons_state & KM_LEFT) {
-				velocity[0] -= hori_speed;
-			}
-
-			if (game.input.buttons_state & KM_ACT1) {
-				if (game.actors[0].position_tags & SF_ON_GROUND) {
-					velocity[1] -= 10.0f;
-				}
-			}
-			glm_vec2_add(gravity, velocity, velocity);
-
-			// set max velo
-			velocity[0] = min(20, fabs(velocity[0])) * c2Sign(velocity[0]);
-			velocity[1] = min(50, fabs(velocity[1])) * c2Sign(velocity[1]);
-
-			// drag
-			if (fabs(velocity[0]) > 0) {
-				f32 drag = 2.0f;
-				if (game.actors[0].position_tags & SF_ON_GROUND) {
-					drag = 1.0f;
-				}
-				velocity[0] -= drag * c2Sign(velocity[0]);
-				if (fabs(velocity[0]) < .0003) {
-					velocity[0] = 0;
-				}
-			}
-			game.actors[0].ground.p.x = game.actors[0].position[0];
-			game.actors[0].ground.p.y = game.actors[0].position[1];
-
-			game.actors[0].hitbox.min.x =
-				game.actors[0].position[0] - (38 / 2) + velocity[0];
-			game.actors[0].hitbox.min.y =
-				game.actors[0].position[1] - (38 / 2) + velocity[1];
-			game.actors[0].hitbox.max.x = game.actors[0].hitbox.min.x + 38;
-			game.actors[0].hitbox.max.y = game.actors[0].hitbox.min.y + 38;
-
-			vec2 adjust = {0, 0};
-			b32 already_on_ground = false;
-			for (int i = 0; i < wall_count; ++i) {
-				c2Raycast rc;
-				if (!already_on_ground) {
-					if (c2RaytoAABB(game.actors[0].ground, wall[i], &rc)) {
-						aSetPositionTag(&game.actors[0], SF_ON_GROUND);
-						already_on_ground = true;
-					} else {
-						aResetPositionTag(&game.actors[0], SF_ON_GROUND);
-					}
-				}
-
-				if (c2AABBtoAABB(game.actors[0].hitbox, wall[i])) {
-					c2Manifold col;
-					c2AABBtoAABBManifold(game.actors[0].hitbox, wall[i], &col);
-					// printf("%f, %f\n", col.depths[0], col.depths[1]);
-					adjust[0] += col.depths[0] * col.n.x;
-					adjust[1] += col.depths[0] * col.n.y;
-				}
-			}
-			glm_vec2_sub(velocity, adjust, velocity);
-			glm_vec2_add(game.actors[0].position, velocity,
-						 game.actors[0].position);
-
-			if (game.actors[0].position_tags & SF_ON_GROUND) {
-				velocity[1] = 0;
-			}
+			aUpdatePlayer(&game, &(game.actors[0]));
 
 			accumulator -= dt;
 		}
 		glm_mat4_identity(renderer.view);
-		f32 sc = .5f;
+		f32 sc = .25f;
 		vec2 vscale = {sc, sc};
 		glm_scale(renderer.view, (vec3){vscale[0], vscale[1], 1.0});
 
@@ -342,21 +256,21 @@ int main() {
 		for (int i = 0; i < wall_count; ++i) {
 			mat4 model;
 			glm_mat4_identity(model);
-			glm_translate(model, (vec3){wall[i].min.x, wall[i].min.y, 0});
-			glm_scale(model, (vec3){wall[i].max.x - wall[i].min.x,
-									wall[i].max.y - wall[i].min.y, 1});
+			glm_translate(model, (vec3){game.static_geometry[i].min.x,
+										game.static_geometry[i].min.y, 0});
+			glm_scale(model, (vec3){game.static_geometry[i].max.x -
+										game.static_geometry[i].min.x,
+									game.static_geometry[i].max.y -
+										game.static_geometry[i].min.y,
+									1});
 			rDrawPrimitive(&renderer, uncentered_rectangle_primitive, model,
 						   (vec4){1.0, 0, 0, 1.0});
 		}
 
-		rDrawSprite(&renderer, &spr_player, game.actors->position,
+		rDrawSprite(&renderer, &spr_player, game.actors[0].position,
 					(vec2){1, 1});
-
-		rSwapFrameBuffer(&renderer, FB_LIGHTING);
-		rClear(&renderer);
-		lmGenerateLightMesh(wall, wall_count, game.actors[0].position, 400, 360,
-							&l);
-		rDrawLightMesh(&renderer, &l);
+		rDrawSprite(&renderer, &spr_player, game.actors[1].position,
+					(vec2){1, 1});
 
 		rSwapFrameBuffer(&renderer, FB_WINDOW);
 		rClear(&renderer);
