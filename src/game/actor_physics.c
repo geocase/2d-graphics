@@ -4,6 +4,7 @@ void aAdjustCollisions(Game_t *game, Actor_t *actor) {
 	i32 wall_count = 3;
 	vec2 adjust = {0, 0};
 	b32 already_on_ground = false;
+	b32 already_next_to_wall = false;
 	for (int i = 0; i < wall_count; ++i) {
 		c2Raycast rc;
 		if (!already_on_ground) {
@@ -12,6 +13,15 @@ void aAdjustCollisions(Game_t *game, Actor_t *actor) {
 				already_on_ground = true;
 			} else {
 				aResetPositionTag(actor, SF_ON_GROUND);
+			}
+		}
+
+		if (!already_next_to_wall) {
+			if (c2RaytoAABB(actor->forward, game->static_geometry[i], &rc)) {
+				aSetPositionTag(actor, SF_TOUCHING_WALL);
+				already_next_to_wall = true;
+			} else {
+				aResetPositionTag(actor, SF_TOUCHING_WALL);
 			}
 		}
 
@@ -59,6 +69,8 @@ void aUpdateHitbox(Actor_t *actor) {
 	// for player only, generalize this!
 	actor->ground.p.x = actor->position[0];
 	actor->ground.p.y = actor->position[1];
+	actor->forward.p.x = actor->position[0];
+	actor->forward.p.y = actor->position[1];
 
 	actor->hitbox.min.x = actor->position[0] - (38 / 2) + actor->velocity[0];
 	actor->hitbox.min.y = actor->position[1] - (38 / 2) + actor->velocity[1];
@@ -82,8 +94,16 @@ void aFollow(Actor_t *const follower, const Actor_t *const followee,
 	f32 hori_speed = 2.5;
 	if (follower->position[0] < followee->position[0]) {
 		follower->velocity[0] += hori_speed;
+		follower->forward.d.x = 1.0;
 	} else {
 		follower->velocity[0] -= hori_speed;
+		follower->forward.d.x = -1.0;
+	}
+
+	if (followee->position[1] < follower->position[1]) {
+		if ((follower->position_tags & SF_TOUCHING_WALL)) {
+			aJump(follower, 10.0f);
+		}
 	}
 	return;
 }

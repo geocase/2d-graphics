@@ -15,6 +15,12 @@ void aInitPlayer(Game_t *game, Actor_t *actor) {
 	actor->ground.d.x = 0;
 	actor->ground.d.y = 1.0f;
 	actor->ground.t = (38 / 2) + 1;
+
+	actor->forward.p.x = actor->position[0];
+	actor->forward.p.y = actor->position[1];
+	actor->forward.d.x = 1.0;
+	actor->forward.d.y = 0.0f;
+	actor->forward.t = (38 / 2) + 4;
 	actor->velocity[0] = 0;
 	actor->velocity[1] = 0;
 }
@@ -29,9 +35,11 @@ void aUpdatePlayer(Game_t *game, Actor_t *actor) {
 	}
 	if (game->input.buttons_state & KM_RIGHT) {
 		actor->velocity[0] += hori_speed;
+		actor->forward.d.x = 1.0;
 	}
 	if (game->input.buttons_state & KM_LEFT) {
 		actor->velocity[0] -= hori_speed;
+		actor->forward.d.x = -1.0;
 	}
 
 	if (game->input.buttons_state & KM_ACT1) {
