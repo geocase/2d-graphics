@@ -277,9 +277,9 @@ int main() {
 		}
 
 		rDrawSprite(&renderer, &spr_player, game.actors[0].position,
-					(vec2){1, 1});
+					(vec2){-game.actors[0].forward.d.x, 1});
 		rDrawSprite(&renderer, &spr_player, game.actors[1].position,
-					(vec2){1, 1});
+					(vec2){-game.actors[1].forward.d.x, 1});
 
 		rSwapFrameBuffer(&renderer, FB_WINDOW);
 		rClear(&renderer);
