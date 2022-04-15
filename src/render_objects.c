@@ -90,7 +90,7 @@ void lmGenerateLightMesh(c2AABB *shadow_casters, u32 shadow_caster_count,
 	free(circle_verts);
 }
 
-void rDrawLightMesh(Renderer_t *renderer, struct LightMesh *lm) {
+void lmDrawLightMesh(Renderer_t *renderer, struct LightMesh *lm) {
 	vec4 color = {0, 0, 0.0f, 1.0f};
 	mat4 model;
 	glm_mat4_identity(model);
@@ -140,8 +140,8 @@ RenderPrimitive_t rpNewRenderPrimitive(f32 *verts, u32 vert_count, u32 *indices,
 	return rp;
 }
 
-void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
-					mat4 model, vec4 color) {
+void rpDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
+					 mat4 model, vec4 color) {
 
 	shdUseShader(&renderer->shaders[SHADER_PRIMITIVE]);
 	glBindVertexArray(primitive.vao);

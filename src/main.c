@@ -260,8 +260,8 @@ int main() {
 									game.static_geometry[i].max.y -
 										game.static_geometry[i].min.y,
 									1});
-			rDrawPrimitive(&renderer, uncentered_rectangle_primitive, model,
-						   (vec4){1.0, 0, 0, 1.0});
+			rpDrawPrimitive(&renderer, uncentered_rectangle_primitive, model,
+							(vec4){1.0, 0, 0, 1.0});
 		}
 
 		rDrawSprite(&renderer, &spr_player, game.actors[0].position,
