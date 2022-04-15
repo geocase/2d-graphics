@@ -82,21 +82,28 @@ void rGenerateSpriteGLIndices(Renderer_t *renderer) {
 }
 
 void rReloadShaders(Renderer_t *renderer) {
-	shdDeleteShader(&renderer->shaders[SHADER_SPRITE]);
-	shdDeleteShader(&renderer->shaders[SHADER_PRIMITIVE]);
-	char *primitive_vertex_shader = readFilePathToCStr("shaders/primitive.vs");
-	char *primitive_fragment_shader =
-		readFilePathToCStr("shaders/primitive.fs");
-	char *sprite_vertex_shader = readFilePathToCStr("shaders/sprite.vs");
-	char *sprite_fragment_shader = readFilePathToCStr("shaders/sprite.fs");
-	renderer->shaders[SHADER_SPRITE] =
-		shdNewShader(sprite_vertex_shader, sprite_fragment_shader);
-	renderer->shaders[SHADER_PRIMITIVE] =
-		shdNewShader(primitive_vertex_shader, primitive_fragment_shader);
-	free(primitive_vertex_shader);
-	free(primitive_fragment_shader);
-	free(sprite_vertex_shader);
-	free(sprite_fragment_shader);
+	for (int i = 0; i < SHADER_MAX; ++i) {
+		shdDeleteShader(&renderer->shaders[i]);
+	}
+
+	char *vertex_shader_paths[] = {[SHADER_SPRITE] = "shaders/sprite.vs",
+								   [SHADER_PRIMITIVE] = "shaders/primitive.vs",
+								   [SHADER_BUFFER] = "shaders/buffer.vs",
+								   [SHADER_LIGHTING_BUFFER] =
+									   "shaders/lighting_buffer.vs"};
+	char *fragment_shader_paths[] = {
+		[SHADER_SPRITE] = "shaders/sprite.fs",
+		[SHADER_PRIMITIVE] = "shaders/primitive.fs",
+		[SHADER_BUFFER] = "shaders/buffer.fs",
+		[SHADER_LIGHTING_BUFFER] = "shaders/lighting_buffer.fs"};
+
+	for (int i = 0; i < SHADER_MAX; ++i) {
+		char *vertex_shader = readFilePathToCStr(vertex_shader_paths[i]);
+		char *fragment_shader = readFilePathToCStr(fragment_shader_paths[i]);
+		renderer->shaders[i] = shdNewShader(vertex_shader, fragment_shader);
+		free(vertex_shader);
+		free(fragment_shader);
+	}
 }
 
 void rResize(Renderer_t *renderer, int w, int h) {
@@ -180,9 +187,9 @@ void rDrawSprite(Renderer_t *renderer, Sprite_t *sprite, vec2 position,
 }
 
 void rGenerateFrameBuffer(Renderer_t *renderer, vec2 size, u32 framebuffer_idx,
-						  Shader_t shader) {
+						  u32 shader_idx) {
 
-	renderer->framebuffers[framebuffer_idx].shader = shader;
+	renderer->framebuffers[framebuffer_idx].shader_index = shader_idx;
 	glm_vec2_copy(size, renderer->framebuffers[framebuffer_idx].size);
 	renderer->framebuffers[framebuffer_idx].size[0] = size[0];
 	glGenFramebuffers(1, &renderer->framebuffers[framebuffer_idx].index);
@@ -223,7 +230,9 @@ void rSwapFrameBuffer(Renderer_t *renderer, u32 framebuffer_idx) {
 }
 
 void rDrawFrameBuffer(Renderer_t *renderer, u32 framebuffer_idx) {
-	shdUseShader(&renderer->framebuffers[framebuffer_idx].shader);
+	shdUseShader(
+		&renderer
+			 ->shaders[renderer->framebuffers[framebuffer_idx].shader_index]);
 	glBindVertexArray(renderer->fb_gl.vao);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->fb_gl.ebo);
 	glBindTexture(GL_TEXTURE_2D,

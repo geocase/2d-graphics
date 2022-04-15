@@ -13,7 +13,13 @@ typedef struct {
 RenderPrimitive_t rpNewRenderPrimitive(f32 *verts, u32 vert_count, u32 *indices,
 									   u32 tri_count);
 
-enum { SHADER_SPRITE, SHADER_PRIMITIVE, SHADER_MAX };
+enum {
+	SHADER_SPRITE,
+	SHADER_PRIMITIVE,
+	SHADER_BUFFER,
+	SHADER_LIGHTING_BUFFER,
+	SHADER_MAX
+};
 enum { FB_WINDOW, FB_SCENE, FB_LIGHTING, FB_MAX };
 
 struct SpriteGLIndices {
@@ -28,7 +34,7 @@ typedef struct {
 	u32 index;
 	u32 texture;
 	vec2 size;
-	Shader_t shader;
+	u32 shader_index;
 } Framebuffer_t;
 
 typedef struct {
@@ -46,7 +52,8 @@ typedef struct {
 
 void rGenerateSpriteGLIndices(Renderer_t *renderer);
 void rGenerateFramebufferGLIndices(Renderer_t *renderer);
-void rGenerateFrameBuffer(Renderer_t *renderer, vec2 size, u32 framebuffer_idx);
+void rGenerateFrameBuffer(Renderer_t *renderer, vec2 size, u32 framebuffer_idx,
+						  u32 shader_idx);
 void rReloadShaders(Renderer_t *renderer);
 
 void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,

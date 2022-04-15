@@ -108,23 +108,11 @@ int main() {
 	u32 mouse_x, mouse_y;
 	rReloadShaders(&renderer);
 
-	char *screen_shader_vs = readFilePathToCStr("shaders/buffer.vs");
-	char *screen_shader_fs = readFilePathToCStr("shaders/buffer.fs");
-	Shader_t screen_shader = shdNewShader(screen_shader_vs, screen_shader_fs);
-	free(screen_shader_vs);
-	free(screen_shader_fs);
-
 	rGenerateFrameBuffer(&renderer, (vec2){BUFFER_X, BUFFER_Y}, FB_SCENE,
-						 screen_shader);
+						 SHADER_BUFFER);
 
-	screen_shader_vs = readFilePathToCStr("shaders/lighting_buffer.vs");
-	screen_shader_fs = readFilePathToCStr("shaders/lighting_buffer.fs");
-	screen_shader = shdNewShader(screen_shader_vs, screen_shader_fs);
 	rGenerateFrameBuffer(&renderer, (vec2){BUFFER_X, BUFFER_Y}, FB_LIGHTING,
-						 screen_shader);
-
-	free(screen_shader_vs);
-	free(screen_shader_fs);
+						 SHADER_LIGHTING_BUFFER);
 
 	struct LightMesh point3;
 
@@ -247,7 +235,7 @@ int main() {
 			accumulator -= dt;
 		}
 		glm_mat4_identity(renderer.view);
-		f32 sc = .25f;
+		f32 sc = 0.25f;
 		vec2 vscale = {sc, sc};
 		glm_scale(renderer.view, (vec3){vscale[0], vscale[1], 1.0});
 
