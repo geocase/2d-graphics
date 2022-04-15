@@ -6,13 +6,6 @@
 #include "image.h"
 #include "shader.h"
 
-typedef struct {
-	u32 vao, vbo, ebo;
-	u32 tri_count;
-} RenderPrimitive_t;
-RenderPrimitive_t rpNewRenderPrimitive(f32 *verts, u32 vert_count, u32 *indices,
-									   u32 tri_count);
-
 enum {
 	SHADER_SPRITE,
 	SHADER_PRIMITIVE,
@@ -55,9 +48,6 @@ void rGenerateFramebufferGLIndices(Renderer_t *renderer);
 void rGenerateFrameBuffer(Renderer_t *renderer, vec2 size, u32 framebuffer_idx,
 						  u32 shader_idx);
 void rReloadShaders(Renderer_t *renderer);
-
-void rDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
-					mat4 model, vec4 color);
 
 void rDrawSprite(Renderer_t *renderer, Sprite_t *sprite, vec2 position,
 				 vec2 scale);
