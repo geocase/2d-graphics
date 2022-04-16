@@ -25,6 +25,19 @@
 #define BUFFER_Y 240
 #define BUFFER_X 426
 
+void gUpdate(Game_t *game, u64 time) {
+	aUpdatePlayer(game, &(game->actors[0]));
+
+	aFall(&(game->actors[1]));
+	aFollow(&(game->actors[1]), &(game->actors[0]), 400);
+	aDrag(&(game->actors[1]));
+	aCapSpeed(&(game->actors[1]));
+	aUpdateHitbox(&(game->actors[1]));
+	aAdjustCollisions(game, &(game->actors[1]));
+	aCommitMovement(&(game->actors[1]));
+	printf("%ld\n", time);
+}
+
 int main() {
 	SDL_Init(SDL_INIT_VIDEO);
 	IMG_Init(IMG_INIT_PNG);
@@ -114,6 +127,8 @@ int main() {
 
 	struct LightMesh l;
 
+	b32 pause = false;
+
 	while (!quit) {
 		i32 start = SDL_GetPerformanceCounter();
 		f64 new_time = SDL_GetTicks64() / 1000.0f;
@@ -137,6 +152,9 @@ int main() {
 					switch (ev.key.keysym.sym) {
 					case SDLK_F5:
 						rReloadShaders(&renderer);
+						break;
+					case SDLK_F6:
+						pause = !pause;
 						break;
 					case SDLK_w:
 						iPressKey(&(game.input), KM_UP);
@@ -193,16 +211,9 @@ int main() {
 					break;
 				}
 			}
-
-			aUpdatePlayer(&game, &(game.actors[0]));
-
-			aFall(&(game.actors[1]));
-			aFollow(&(game.actors[1]), &(game.actors[0]), 400);
-			aDrag(&(game.actors[1]));
-			aCapSpeed(&(game.actors[1]));
-			aUpdateHitbox(&(game.actors[1]));
-			aAdjustCollisions(&game, &(game.actors[1]));
-			aCommitMovement(&(game.actors[1]));
+			if (!pause) {
+				gUpdate(&game, SDL_GetTicks64());
+			}
 
 			accumulator -= dt;
 		}
