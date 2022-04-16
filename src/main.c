@@ -61,36 +61,8 @@ int main() {
 
 	rGenerateSpriteGLIndices(&renderer);
 	rGenerateFramebufferGLIndices(&renderer);
-#define CIRCLE_RESOLUTION 50
-	vec2 circle_verts[CIRCLE_RESOLUTION + 1];
-	u32 circle_indices[CIRCLE_RESOLUTION * 3];
-	vec2 center = {0, 0};
-	f32 angle = 0.0f;
-	f32 max_angle = 2.0f * M_PI;
-	for (i32 i = 0; i < CIRCLE_RESOLUTION; ++i) {
-		circle_verts[i][0] = cosf(angle);
-		circle_verts[i][1] = sinf(angle);
-		angle += max_angle / CIRCLE_RESOLUTION;
-	}
-	glm_vec2_copy(center, circle_verts[CIRCLE_RESOLUTION]);
-	for (i32 i = 0; i < CIRCLE_RESOLUTION; ++i) {
-		// previous -> center -> next
-		i32 set = i * 3;
-		circle_indices[set] = i;
-		circle_indices[set + 1] = (i + 1) % CIRCLE_RESOLUTION;
-		circle_indices[set + 2] = CIRCLE_RESOLUTION;
-	}
 
-	RenderPrimitive_t circle_primitive =
-		rpNewRenderPrimitive(circle_verts, CIRCLE_RESOLUTION + 1,
-							 circle_indices, CIRCLE_RESOLUTION * 3);
-
-	f32 uncentered_rectangle_verts[] = {0.0f, 0.0f, 1.0f, 0.0f,
-										1.0f, 1.0f, 0.0f, 1.0f};
-	u32 uncentered_rectangle_indices[] = {0, 1, 3, 1, 2, 3};
-
-	RenderPrimitive_t uncentered_rectangle_primitive = rpNewRenderPrimitive(
-		uncentered_rectangle_verts, 4, uncentered_rectangle_indices, 6);
+	rpGenerateRenderPrimitives();
 
 	Sprite_t spr_counting =
 		imgLoadSprite("64x64.png", 64, 64, 0, 1.0f / 1.0f, 0);
@@ -260,8 +232,8 @@ int main() {
 									game.static_geometry[i].max.y -
 										game.static_geometry[i].min.y,
 									1});
-			rpDrawPrimitive(&renderer, uncentered_rectangle_primitive, model,
-							(vec4){1.0, 0, 0, 1.0});
+			rpDrawPrimitive(&renderer, render_primitives[PRIM_UNCENTERED_RECT],
+							model, (vec4){1.0, 0, 0, 1.0});
 		}
 
 		rDrawSprite(&renderer, &spr_player, game.actors[0].position,

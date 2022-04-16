@@ -25,4 +25,9 @@ RenderPrimitive_t rpNewRenderPrimitive(f32 *verts, u32 vert_count, u32 *indices,
 void rpDrawPrimitive(Renderer_t *renderer, RenderPrimitive_t primitive,
 					 mat4 model, vec4 color);
 
+enum { PRIM_CIRCLE, PRIM_UNCENTERED_RECT, PRIM_MAX };
+
+extern RenderPrimitive_t render_primitives[PRIM_MAX];
+void rpGenerateRenderPrimitives();
+
 #endif
